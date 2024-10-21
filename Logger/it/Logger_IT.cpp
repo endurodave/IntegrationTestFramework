@@ -2,6 +2,9 @@
 // 
 // @see https://github.com/endurodave/IntegrationTestFramework
 // David Lafreniere, Oct 2024.
+//
+// All tests run within the IntegrationTest thread context. Logger subsystem runs 
+// within the Logger thread context. 
 
 #include "Logger.h"
 #include "DelegateLib.h"
@@ -21,7 +24,20 @@ using namespace DelegateLib;
 // Local integration test variables
 static SignalThread signal;
 static vector<string> callbackStatus;
+static milliseconds flushDuration;
+static mutex mtx;
 static int mapIdx;
+
+// Callback function invoked from Logger thread context
+void FlushTimeCb(milliseconds duration)
+{
+	// Protect flushTime against multiple thread access by IntegrationTest 
+	// thread and Logger thread
+	lock_guard<mutex> lock(mtx);
+
+	// Save the flush time
+	flushDuration = duration;
+}
 
 // Logger callback handler function.
 void LoggerStatusCb(const string& status)
@@ -33,7 +49,7 @@ void LoggerStatusCb(const string& status)
 	signal.SetSignal();
 }
 
-// Test the Logger::Write() subsystem public API.
+// Test the Logger::Write() subsystem public API. 
 TEST(Logger_IT, Write) 
 {
 	// Register a Logger callback
@@ -62,12 +78,12 @@ TEST(Logger_IT, Write)
 	Logger::GetInstance().SetCallback(nullptr);
 }
 
-// Test LogData::Flush() subsystem internal API. This API normally is 
-// not called by client code because it is not thread-safe. However, using 
-// Delegate library it can be invoked on the Logger's thread of control.
+// Test LogData::Flush() subsystem internal API. The internal LogData class is 
+// not normally called directly by client code because it is not thread-safe. 
+// However, the Delegate library easily calls functions on the Logger thread context.
 TEST(Logger_IT, Flush)
 {
-	// Create a asynchronous blocking delegate targeted at the Logger::Flush function
+	// Create a asynchronous blocking delegate targeted at the LogData::Flush function
 	auto flushAsyncBlockingDelegate = MakeDelegate(
 		&Logger::GetInstance().m_logData,	// LogData object within Logger class
 		&LogData::Flush,					// LogData function to invoke
@@ -83,8 +99,17 @@ TEST(Logger_IT, Flush)
 		EXPECT_TRUE(retVal.value()); // Did LogData::Flush return true?
 }
 
+// Test LogData::Flush executes in under 10mS
 TEST(Logger_IT, FlushTime)
 {
+	{
+		lock_guard<mutex> lock(mtx);
+		flushDuration = milliseconds(-1);
+	}
+
+	// Register for a callback from Logger thread
+	Logger::GetInstance().m_logData.FlushTimeDelegate += MakeDelegate(&FlushTimeCb);
+
 	// Clear the m_msgData list on Logger thread
 	auto retVal1 = MakeDelegate(
 		&Logger::GetInstance().m_logData.m_msgData,	// Object instance
@@ -123,6 +148,18 @@ TEST(Logger_IT, FlushTime)
 	EXPECT_TRUE(retVal2.has_value());
 	if (retVal2.has_value())
 		EXPECT_TRUE(retVal2.value());
+
+	{
+		// Protect access to flushDuration
+		lock_guard<mutex> lock(mtx);
+
+		// Check flush time is less than 10mS
+		EXPECT_GE(flushDuration, std::chrono::milliseconds(0));
+		EXPECT_LE(flushDuration, std::chrono::milliseconds(10));
+	}
+
+	// Unregister from callback
+	Logger::GetInstance().m_logData.FlushTimeDelegate -= MakeDelegate(&FlushTimeCb);
 }
 
 // Dummy function to force linker to keep the code in this file

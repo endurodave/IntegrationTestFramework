@@ -1,10 +1,8 @@
 #include "Logger.h"
 #include "Fault.h"
-#include "DelegateLib.h"
 
 using namespace std;
 
-// TODO C++ enum
 // Worker thread message ID's
 #define MSG_WRITE				1
 #define MSG_EXIT_THREAD			2
@@ -137,6 +135,7 @@ void Logger::ExitThread()
 //----------------------------------------------------------------------------
 // DispatchDelegate
 //----------------------------------------------------------------------------
+#ifdef IT_ENABLE
 void Logger::DispatchDelegate(std::shared_ptr<DelegateLib::DelegateMsgBase> msg)
 {
 	ASSERT_TRUE(m_thread);
@@ -149,6 +148,7 @@ void Logger::DispatchDelegate(std::shared_ptr<DelegateLib::DelegateMsgBase> msg)
 	m_queue.push(threadMsg);
 	m_cv.notify_one();
 }
+#endif
 
 //----------------------------------------------------------------------------
 // TimerThread
@@ -230,6 +230,7 @@ void Logger::Process()
 				break;
 			}
 
+#ifdef IT_ENABLE
 			case MSG_DISPATCH_DELEGATE:
 			{
 				// Cast pointer to a DelegateMsg
@@ -242,6 +243,7 @@ void Logger::Process()
 				delegateMsgBase->GetDelegateInvoker()->DelegateInvoke(delegateMsgBase);
 				break;
 			}
+#endif
 
 			case MSG_EXIT_THREAD:
 			{

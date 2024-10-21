@@ -51,5 +51,7 @@ void IntegrationTest::Run()
 	int retVal = RUN_ALL_TESTS();
 
 	std::cout << "RUN_ALL_TESTS() return value: " << retVal << std::endl;
+
+	m_complete = true;
 }
 

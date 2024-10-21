@@ -6,12 +6,16 @@
 
 #include "WorkerThreadStd.h"
 #include "Timer.h"
+#include <atomic>
 
 class IntegrationTest
 {
 public:
 	/// Get singleton instance of this class
 	static IntegrationTest& GetInstance();
+
+	// Return true if integration test is complete
+	std::atomic<bool>& IsComplete() { return m_complete; }
 
 private:
 	IntegrationTest();
@@ -25,6 +29,8 @@ private:
 
 	// Timer to start integration tests
 	Timer m_timer;
+
+	std::atomic<bool> m_complete = false;
 };
 
 #endif

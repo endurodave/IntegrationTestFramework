@@ -11,7 +11,10 @@
 
 class Msg;
 
-class Logger : public DelegateLib::DelegateThread
+class Logger 
+#ifdef IT_ENABLE
+	: public DelegateLib::DelegateThread
+#endif
 {
 public:
 	typedef void (*LoggerStatusCb)(const std::string& status);
@@ -31,8 +34,9 @@ public:
 		m_pLoggerStatusCb = callbackFunc;
 	}
 
-	// TODO: virtual? public? 
+#ifdef IT_ENABLE
 	virtual void DispatchDelegate(std::shared_ptr<DelegateLib::DelegateMsgBase> msg);
+#endif
 
 private:
 IT_PRIVATE_ACCESS:
