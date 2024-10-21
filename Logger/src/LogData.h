@@ -3,6 +3,7 @@
 
 #include <string>
 #include <list>
+#include "IT_Common.h"
 
 /// @brief LogData stores log data. LogData is not thread-safe.
 class LogData
@@ -17,8 +18,10 @@ public:
 	bool Flush();
 
 private:
+IT_PRIVATE_ACCESS :
+
 	/// List to hold log data messages
-	std::list<std::string> m_logData;
+	std::list<std::string> m_msgData;
 };
 
 #endif

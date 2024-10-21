@@ -1,10 +1,10 @@
 # Example CMake command line to create project build files:
 #
 # *** Windows ***
-# cmake -G "Visual Studio 17 2022" -A Win32 -B ../IntegrationTestFrameworkBuild -S .
+# cmake -G "Visual Studio 17 2022" -A Win32 -B ../IntegrationTestFrameworkBuild -S . -DENABLE_IT=ON
 #
 # *** Linux ***
-# cmake -G "Unix Makefiles" -B ../IntegrationTestFrameworkBuild -S .
+# cmake -G "Unix Makefiles" -B ../IntegrationTestFrameworkBuild -S . -DENABLE_IT=ON
 
 # Specify the minimum CMake version required
 cmake_minimum_required(VERSION 3.10)
@@ -44,9 +44,9 @@ include_directories(
 # Add an executable target
 add_executable(IntegrationTestFrameworkApp ${SOURCES})
 
-# Define the DELEGATE_UNIT_TEST macro for the IntegrationTestFrameworkApp target
-if (ENABLE_UNIT_TESTS)
-    add_compile_definitions(DELEGATE_UNIT_TESTS)
+# Define the IT_ENABLE macro for the IntegrationTestFrameworkApp target
+if (ENABLE_IT)
+    add_compile_definitions(IT_ENABLE)
 endif()
 
 # Add subdirectories to build (product related code)

@@ -2,13 +2,12 @@
 #define _LOGGER_H
 
 #include "LogData.h"
-#include "DelegateLib.h"
-#include "IT_Common.h"
 #include <thread>
 #include <queue>
 #include <mutex>
 #include <atomic>
 #include <condition_variable>
+#include "IT_Common.h"
 
 class Msg;
 

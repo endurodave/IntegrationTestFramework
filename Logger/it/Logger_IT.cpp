@@ -4,9 +4,8 @@
 // David Lafreniere, Oct 2024.
 
 #include "Logger.h"
-
 #include "DelegateLib.h"
-#include "Signal.h"
+#include "SignalThread.h"
 
 // Prevent conflict with GoogleTest ASSERT_TRUE macro definition
 #ifdef ASSERT_TRUE
@@ -16,10 +15,11 @@
 #include <gtest/gtest.h>
 
 using namespace std;
+using namespace std::chrono;
 using namespace DelegateLib;
 
 // Local integration test variables
-static Signal signal;
+static SignalThread signal;
 static vector<string> callbackStatus;
 static int mapIdx;
 
@@ -72,7 +72,7 @@ TEST(Logger_IT, Flush)
 		&Logger::GetInstance().m_logData,	// LogData object within Logger class
 		&LogData::Flush,					// LogData function to invoke
 		Logger::GetInstance(),				// Thread to invoke Flush (Logger is-a DelegateThread)
-		chrono::milliseconds(500));			// Wait up to 500mS for Flush function to be called
+		milliseconds(100));					// Wait up to 100mS for Flush function to be called
 
 	// Invoke LogData::Flush on the Logger thread and obtain the return value
 	std::optional<bool> retVal = flushAsyncBlockingDelegate.AsyncInvoke();
@@ -80,9 +80,49 @@ TEST(Logger_IT, Flush)
 	// Check test results
 	EXPECT_TRUE(retVal.has_value()); // Did async LogData::Flush function call succeed?
 	if (retVal.has_value())
-	{
 		EXPECT_TRUE(retVal.value()); // Did LogData::Flush return true?
+}
+
+TEST(Logger_IT, FlushTime)
+{
+	// Clear the m_msgData list on Logger thread
+	auto retVal1 = MakeDelegate(
+		&Logger::GetInstance().m_logData.m_msgData,	// Object instance
+		&std::list<std::string>::clear,				// Class function
+		Logger::GetInstance(),						// Thread
+		milliseconds(50)).AsyncInvoke();
+
+	// Check asynchronous function call succeeded
+	EXPECT_TRUE(retVal1.has_value());
+	if (retVal1.has_value())
+		EXPECT_TRUE(retVal1.value());
+
+	for (int i = 0; i < 10; i++)
+	{
+		//  Call LogData::Write on Logger thread
+		auto retVal = MakeDelegate(
+			&Logger::GetInstance().m_logData,
+			&LogData::Write,
+			Logger::GetInstance(),
+			milliseconds(50)).AsyncInvoke("Flush Timer String");
+
+		// Check asynchronous function call succeeded
+		EXPECT_TRUE(retVal.has_value());
+		if (retVal.has_value())
+			EXPECT_TRUE(retVal.value());
 	}
+
+	// Call LogData::Flush on Logger thread
+	auto retVal2 = MakeDelegate(
+		&Logger::GetInstance().m_logData,
+		&LogData::Flush,
+		Logger::GetInstance(),
+		milliseconds(100)).AsyncInvoke();
+
+	// Check asynchronous function call succeeded
+	EXPECT_TRUE(retVal2.has_value());
+	if (retVal2.has_value())
+		EXPECT_TRUE(retVal2.value());
 }
 
 // Dummy function to force linker to keep the code in this file

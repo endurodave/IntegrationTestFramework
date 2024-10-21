@@ -1,5 +1,5 @@
-#ifndef _SIGNAL_H
-#define _SIGNAL_H
+#ifndef _SIGNAL_THREAD_H
+#define _SIGNAL_THREAD_H
 
 #include <iostream>
 #include <thread>
@@ -7,11 +7,11 @@
 #include <condition_variable>
 #include <chrono>
 
-class Signal 
+class SignalThread
 {
 public:
     // Constructor initializes the signal to false
-    Signal() : m_signalSet(false) { }
+    SignalThread() : m_signalSet(false) { }
 
     // This function waits for the signal for a maximum of milliseconds. It
     // returns true if the signal was set within the timeout, false otherwise.
