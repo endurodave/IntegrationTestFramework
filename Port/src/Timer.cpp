@@ -1,3 +1,5 @@
+#ifdef IT_ENABLE
+
 #include "Timer.h"
 #include "Fault.h"
 #include <chrono>
@@ -129,3 +131,4 @@ std::chrono::milliseconds Timer::GetTime()
 	return millis;
 }
 
+#endif

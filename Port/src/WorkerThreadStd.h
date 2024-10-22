@@ -1,6 +1,8 @@
 #ifndef _THREAD_STD_H
 #define _THREAD_STD_H
 
+#ifdef IT_ENABLE
+
 // @see https://github.com/endurodave/StdWorkerThread
 // David Lafreniere, Feb 2017.
 
@@ -55,6 +57,8 @@ private:
     std::atomic<bool> m_timerExit;
 	const char* THREAD_NAME;
 };
+
+#endif 
 
 #endif 
 

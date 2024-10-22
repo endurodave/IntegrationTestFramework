@@ -31,6 +31,7 @@ private:
 	const std::string m_data;
 };
 
+#ifdef IT_ENABLE
 // Delegate message sent through worker thread message queue
 class DelegateMsg : public Msg
 {
@@ -41,6 +42,7 @@ public:
 private:
 	std::shared_ptr<DelegateLib::DelegateMsgBase> m_data;
 };
+#endif
 
 //----------------------------------------------------------------------------
 // GetInstance

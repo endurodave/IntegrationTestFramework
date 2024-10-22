@@ -1,3 +1,5 @@
+#ifdef IT_ENABLE
+
 #include "DelegateOpt.h"
 #include "WorkerThreadStd.h"
 #include "ThreadMsg.h"
@@ -163,3 +165,4 @@ void WorkerThread::Process()
 	}
 }
 
+#endif

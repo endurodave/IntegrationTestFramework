@@ -1,6 +1,8 @@
 #ifndef _TIMER_H
 #define _TIMER_H
 
+#ifdef IT_ENABLE
+
 #include "DelegateLib.h"
 #include <mutex>
 #include <list>
@@ -66,5 +68,7 @@ private:
 	bool m_enabled = false;
 	static bool m_timerStopped;
 };
+
+#endif
 
 #endif

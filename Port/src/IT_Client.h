@@ -13,7 +13,7 @@
 
 #else
 
-#define IT_PRIVATE_ACCESS
+#define IT_PRIVATE_ACCESS private
 
 #endif // IT_ENABLE
 

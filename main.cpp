@@ -22,10 +22,10 @@
 #ifdef IT_ENABLE
 #include "IntegrationTest.h"
 extern void Logger_IT_ForceLink();
+using namespace DelegateLib;
 #endif
 
 using namespace std;
-using namespace DelegateLib;
 
 //------------------------------------------------------------------------------
 // main

@@ -31,41 +31,53 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--no-as-needed")
 endif()
 
-# Add subdirectories to include path
-include_directories( 
-    ${CMAKE_SOURCE_DIR}/Logger/src
-    ${CMAKE_SOURCE_DIR}/Logger/it
-    ${CMAKE_SOURCE_DIR}/Port/src
-    ${CMAKE_SOURCE_DIR}/Delegate
-    ${CMAKE_SOURCE_DIR}/IntegrationTest
-    ${CMAKE_SOURCE_DIR}/GoogleTest/googletest/include
-)
-
-# Add an executable target
-add_executable(IntegrationTestFrameworkApp ${SOURCES})
-
 # Define the IT_ENABLE macro for the IntegrationTestFrameworkApp target
 if (ENABLE_IT)
     add_compile_definitions(IT_ENABLE)
 endif()
+
+# Add subdirectories to include path
+include_directories( 
+    ${CMAKE_SOURCE_DIR}/Logger/src
+    ${CMAKE_SOURCE_DIR}/Port/src
+)
+
+# Add subdirectories to include path if building integration tests
+if (ENABLE_IT)
+    include_directories(
+        ${CMAKE_SOURCE_DIR}/Logger/it
+        ${CMAKE_SOURCE_DIR}/Delegate
+        ${CMAKE_SOURCE_DIR}/IntegrationTest
+        ${CMAKE_SOURCE_DIR}/GoogleTest/googletest/include
+    )
+endif()
+
+# Add an executable target
+add_executable(IntegrationTestFrameworkApp ${SOURCES})
 
 # Add subdirectories to build (product related code)
 add_subdirectory(Logger/src)
 add_subdirectory(Port/src)
 
 # Add subdirectories to build (integration test related code)
-add_subdirectory(Logger/it)
-add_subdirectory(Delegate)
-add_subdirectory(IntegrationTest)
-add_subdirectory(GoogleTest)
+if (ENABLE_IT)
+    add_subdirectory(Logger/it)
+    add_subdirectory(Delegate)
+    add_subdirectory(IntegrationTest)
+    add_subdirectory(GoogleTest)
+endif()
 
 target_link_libraries(IntegrationTestFrameworkApp PRIVATE 
     LoggerLib
-    Logger_ITLib
     PortLib
-    DelegateLib
-    IntegrationTestLib
-    gtest
-    gtest_main
 )
 
+if (ENABLE_IT)
+    target_link_libraries(IntegrationTestFrameworkApp PRIVATE 
+        Logger_ITLib
+        DelegateLib
+        IntegrationTestLib
+        gtest
+        gtest_main
+    )
+endif()

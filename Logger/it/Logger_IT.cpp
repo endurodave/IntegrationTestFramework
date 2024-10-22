@@ -167,7 +167,7 @@ public:
 	}
 };
 
-// Exact same test FlushTime above, but uses the async_invoke helper function
+// Exact same test as FlushTime above, but uses the AsyncInvoke helper function
 // to simplify syntax and automatically check for async invoke errors.
 TEST(Logger_IT, FlushTimeSimplified)
 {
