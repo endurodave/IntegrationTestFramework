@@ -6,7 +6,8 @@
 #include <chrono>
 #include "IT_Client.h"
 
-/// @brief LogData stores log data. LogData is not thread-safe.
+/// @brief LogData stores log data strings. LogData is not thread-safe. Must only 
+/// be called on the Logger thread of control.
 class LogData
 {
 public:
