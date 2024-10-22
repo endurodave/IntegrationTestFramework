@@ -4,18 +4,14 @@
 // David Lafreniere, Oct 2024.
 //
 // All tests run within the IntegrationTest thread context. Logger subsystem runs 
-// within the Logger thread context. 
+// within the Logger thread context. The Delegate library is used to invoke 
+// functions across thread boundaries. The Google Test library is used to execute 
+// tests and collect results.
 
 #include "Logger.h"
 #include "DelegateLib.h"
 #include "SignalThread.h"
-
-// Prevent conflict with GoogleTest ASSERT_TRUE macro definition
-#ifdef ASSERT_TRUE
-#undef ASSERT_TRUE
-#endif
-
-#include <gtest/gtest.h>
+#include "IT_Util.h"		// Include this last
 
 using namespace std;
 using namespace std::chrono;
@@ -26,9 +22,8 @@ static SignalThread signal;
 static vector<string> callbackStatus;
 static milliseconds flushDuration;
 static mutex mtx;
-static int mapIdx;
 
-// Callback function invoked from Logger thread context
+// Logger callback handler function invoked from Logger thread context
 void FlushTimeCb(milliseconds duration)
 {
 	// Protect flushTime against multiple thread access by IntegrationTest 
@@ -39,7 +34,7 @@ void FlushTimeCb(milliseconds duration)
 	flushDuration = duration;
 }
 
-// Logger callback handler function.
+// Logger callback handler function invoked from Logger thread context
 void LoggerStatusCb(const string& status)
 {
 	// Save logger callback status
@@ -52,16 +47,16 @@ void LoggerStatusCb(const string& status)
 // Test the Logger::Write() subsystem public API. 
 TEST(Logger_IT, Write) 
 {
-	// Register a Logger callback
+	// Register to receive a Logger status callback
 	Logger::GetInstance().SetCallback(&LoggerStatusCb);
 
-	// Write a Logger string value
+	// Write a Logger string value using public API
 	Logger::GetInstance().Write("LoggerTest, Write");
 
 	// Wait for LoggerStatusCb callback up to 500mS
 	bool success = signal.WaitForSignal(500);
 
-	// Wait for LoggerStatusCb callback up to 2 seconds
+	// Wait for 2nd LoggerStatusCb callback up to 2 seconds
 	bool success2 = signal.WaitForSignal(2000);
 
 	// Check test results
@@ -78,12 +73,12 @@ TEST(Logger_IT, Write)
 	Logger::GetInstance().SetCallback(nullptr);
 }
 
-// Test LogData::Flush() subsystem internal API. The internal LogData class is 
+// Test LogData::Flush() subsystem internal class. The internal LogData class is 
 // not normally called directly by client code because it is not thread-safe. 
 // However, the Delegate library easily calls functions on the Logger thread context.
 TEST(Logger_IT, Flush)
 {
-	// Create a asynchronous blocking delegate targeted at the LogData::Flush function
+	// Create an asynchronous blocking delegate targeted at the LogData::Flush function
 	auto flushAsyncBlockingDelegate = MakeDelegate(
 		&Logger::GetInstance().m_logData,	// LogData object within Logger class
 		&LogData::Flush,					// LogData function to invoke
@@ -103,6 +98,7 @@ TEST(Logger_IT, Flush)
 TEST(Logger_IT, FlushTime)
 {
 	{
+		// Protect access to flushDuration
 		lock_guard<mutex> lock(mtx);
 		flushDuration = milliseconds(-1);
 	}
@@ -113,15 +109,14 @@ TEST(Logger_IT, FlushTime)
 	// Clear the m_msgData list on Logger thread
 	auto retVal1 = MakeDelegate(
 		&Logger::GetInstance().m_logData.m_msgData,	// Object instance
-		&std::list<std::string>::clear,				// Class function
-		Logger::GetInstance(),						// Thread
+		&std::list<std::string>::clear,				// Object function
+		Logger::GetInstance(),						// Thread to invoke object function
 		milliseconds(50)).AsyncInvoke();
 
 	// Check asynchronous function call succeeded
 	EXPECT_TRUE(retVal1.has_value());
-	if (retVal1.has_value())
-		EXPECT_TRUE(retVal1.value());
 
+	// Write 10 lines of log data
 	for (int i = 0; i < 10; i++)
 	{
 		//  Call LogData::Write on Logger thread
@@ -133,6 +128,8 @@ TEST(Logger_IT, FlushTime)
 
 		// Check asynchronous function call succeeded
 		EXPECT_TRUE(retVal.has_value());
+
+		// Check that LogData::Write returned true
 		if (retVal.has_value())
 			EXPECT_TRUE(retVal.value());
 	}
@@ -153,7 +150,71 @@ TEST(Logger_IT, FlushTime)
 		// Protect access to flushDuration
 		lock_guard<mutex> lock(mtx);
 
-		// Check flush time is less than 10mS
+		// Check that flush executed in 10mS or less
+		EXPECT_GE(flushDuration, std::chrono::milliseconds(0));
+		EXPECT_LE(flushDuration, std::chrono::milliseconds(10));
+	}
+
+	// Unregister from callback
+	Logger::GetInstance().m_logData.FlushTimeDelegate -= MakeDelegate(&FlushTimeCb);
+}
+
+class Base
+{
+public:
+	void Test(int i, int x)
+	{
+	}
+};
+
+// Exact same test FlushTime above, but uses the async_invoke helper function
+// to simplify syntax and automatically check for async invoke errors.
+TEST(Logger_IT, FlushTimeSimplified)
+{
+	{
+		// Protect access to flushDuration
+		lock_guard<mutex> lock(mtx);
+		flushDuration = milliseconds(-1);
+	}
+
+	// Register for a callback from Logger thread
+	Logger::GetInstance().m_logData.FlushTimeDelegate += MakeDelegate(&FlushTimeCb);
+
+	// Clear the m_msgData list on Logger thread
+	auto retVal1 = AsyncInvoke(
+		&Logger::GetInstance().m_logData.m_msgData,	// Object instance
+		&std::list<std::string>::clear,				// Object function
+		Logger::GetInstance(),						// Thread to invoke object function
+		milliseconds(50));							// Wait up to 50mS for async invoke
+
+	// Write 10 lines of log data
+	for (int i = 0; i < 10; i++)
+	{
+		//  Call LogData::Write on Logger thread
+		auto retVal = AsyncInvoke(
+			&Logger::GetInstance().m_logData,
+			&LogData::Write,
+			Logger::GetInstance(),
+			milliseconds(50), 
+			"Flush Timer String");
+
+		// Check that LogData::Write returned true
+		if (retVal.has_value())
+			EXPECT_TRUE(retVal.value());  
+	}
+
+	// Call LogData::Flush on Logger thread
+	auto retVal2 = AsyncInvoke(
+		&Logger::GetInstance().m_logData,
+		&LogData::Flush,	
+		Logger::GetInstance(),
+		milliseconds(100));
+
+	{
+		// Protect access to flushDuration
+		lock_guard<mutex> lock(mtx);
+
+		// Check that flush executed in 10mS or less
 		EXPECT_GE(flushDuration, std::chrono::milliseconds(0));
 		EXPECT_LE(flushDuration, std::chrono::milliseconds(10));
 	}

@@ -7,6 +7,9 @@
 #include <condition_variable>
 #include <chrono>
 
+// The SignalThread class provides a mechanism for threads to wait for a signal with a timeout. 
+// It allows one thread to signal another thread, which can either wait for the signal or timeout 
+// if the signal is not set within a specified duration.
 class SignalThread
 {
 public:

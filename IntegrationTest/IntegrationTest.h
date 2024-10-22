@@ -8,6 +8,8 @@
 #include "Timer.h"
 #include <atomic>
 
+// The IntegrationTest class executes all integration tests created using the 
+// Google Test framework on a private internal thread of control. 
 class IntegrationTest
 {
 public:

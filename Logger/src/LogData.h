@@ -4,7 +4,7 @@
 #include <string>
 #include <list>
 #include <chrono>
-#include "IT_Common.h"
+#include "IT_Client.h"
 
 /// @brief LogData stores log data. LogData is not thread-safe.
 class LogData

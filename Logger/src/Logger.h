@@ -7,7 +7,7 @@
 #include <mutex>
 #include <atomic>
 #include <condition_variable>
-#include "IT_Common.h"
+#include "IT_Client.h"
 
 class Msg;
 
