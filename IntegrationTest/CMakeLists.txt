@@ -9,3 +9,7 @@ add_library(IntegrationTestLib STATIC ${SUBDIR_SOURCES} ${SUBDIR_HEADERS})
 
 # Include directories for the library
 target_include_directories(IntegrationTestLib PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+
+target_link_libraries(IntegrationTestLib LINK_PUBLIC 
+    	PortLib
+)

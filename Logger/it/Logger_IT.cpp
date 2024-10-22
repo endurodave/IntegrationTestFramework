@@ -18,7 +18,7 @@ using namespace std::chrono;
 using namespace DelegateLib;
 
 // Local integration test variables
-static SignalThread signal;
+static SignalThread signalThread;
 static vector<string> callbackStatus;
 static milliseconds flushDuration;
 static mutex mtx;
@@ -41,7 +41,7 @@ void LoggerStatusCb(const string& status)
 	callbackStatus.push_back(status);
 
 	// Signal the waiting thread to continue
-	signal.SetSignal();
+	signalThread.SetSignal();
 }
 
 // Test the Logger::Write() subsystem public API. 
@@ -54,10 +54,10 @@ TEST(Logger_IT, Write)
 	Logger::GetInstance().Write("LoggerTest, Write");
 
 	// Wait for LoggerStatusCb callback up to 500mS
-	bool success = signal.WaitForSignal(500);
+	bool success = signalThread.WaitForSignal(500);
 
 	// Wait for 2nd LoggerStatusCb callback up to 2 seconds
-	bool success2 = signal.WaitForSignal(2000);
+	bool success2 = signalThread.WaitForSignal(2000);
 
 	// Check test results
 	EXPECT_TRUE(success);
@@ -158,14 +158,6 @@ TEST(Logger_IT, FlushTime)
 	// Unregister from callback
 	Logger::GetInstance().m_logData.FlushTimeDelegate -= MakeDelegate(&FlushTimeCb);
 }
-
-class Base
-{
-public:
-	void Test(int i, int x)
-	{
-	}
-};
 
 // Exact same test as FlushTime above, but uses the AsyncInvoke helper function
 // to simplify syntax and automatically check for async invoke errors.
