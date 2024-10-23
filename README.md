@@ -247,9 +247,9 @@ TEST(Logger_IT, FlushTime)
 
 	// Clear the m_msgData list on Logger thread
 	auto retVal1 = MakeDelegate(
-		&Logger::GetInstance().m_logData.m_msgData,	// Object instance
-		&std::list<std::string>::clear,				// Object function
-		Logger::GetInstance(),						// Thread to invoke object function
+		&Logger::GetInstance().m_logData.m_msgData, // Object instance
+		&std::list<std::string>::clear,             // Object function
+		Logger::GetInstance(),                      // Thread to invoke object function
 		milliseconds(50)).AsyncInvoke();
 
 	// Check asynchronous function call succeeded
@@ -440,7 +440,7 @@ void Logger::Process()
 				auto delegateMsgBase = delegateMsg->GetMsg();
 
 				// Invoke the delegate target function on the target thread context
-				delegateMsgBase->GetDelegateInvoker()->DelegateInvoke(delegateMsgBase);
+			    delegateMsgBase->GetDelegateInvoker()->DelegateInvoke(delegateMsgBase);
 				break;
 			}
 #endif
