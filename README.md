@@ -156,10 +156,10 @@ TEST(Logger_IT, Flush)
 {
 	// Create an asynchronous blocking delegate targeted at the LogData::Flush function
 	auto flushAsyncBlockingDelegate = MakeDelegate(
-		&Logger::GetInstance().m_logData,	// LogData object within Logger class
-		&LogData::Flush,					// LogData function to invoke
-		Logger::GetInstance(),				// Thread to invoke Flush (Logger is-a DelegateThread)
-		milliseconds(100));					// Wait up to 100mS for Flush function to be called
+		&Logger::GetInstance().m_logData,   // LogData object within Logger class
+		&LogData::Flush,                    // LogData function to invoke
+		Logger::GetInstance(),              // Thread to invoke Flush (Logger is-a DelegateThread)
+		milliseconds(100));                 // Wait up to 100mS for Flush function to be called
 
 	// Invoke LogData::Flush on the Logger thread and obtain the return value
 	std::optional<bool> retVal = flushAsyncBlockingDelegate.AsyncInvoke();
@@ -299,7 +299,7 @@ TEST(Logger_IT, FlushTime)
 }
 ```
 
-### FlushTestSimplified
+### FlushTestSimplified Test
 The `FlushTestSimplified` example is identical to the previous test but uses the simplified syntax provided by the `AsyncInvoke<>` helper class. This class automatically handles asynchronous call timeouts and reports test failures if necessary.
 
 ```cpp
@@ -318,10 +318,10 @@ TEST(Logger_IT, FlushTimeSimplified)
 
 	// Clear the m_msgData list on Logger thread
 	auto retVal1 = AsyncInvoke(
-		&Logger::GetInstance().m_logData.m_msgData,	// Object instance
-		&std::list<std::string>::clear,				// Object function
-		Logger::GetInstance(),						// Thread to invoke object function
-		milliseconds(50));							// Wait up to 50mS for async invoke
+		&Logger::GetInstance().m_logData.m_msgData, // Object instance
+		&std::list<std::string>::clear,             // Object function
+		Logger::GetInstance(),                      // Thread to invoke object function
+		milliseconds(50));                          // Wait up to 50mS for async invoke
 
 	// Write 10 lines of log data
 	for (int i = 0; i < 10; i++)
