@@ -1,5 +1,5 @@
 # Integration Test Framework using Google Test and Delegates
-An integration test framework used for testing multi-threaded C++ based projects using Google Test and Asynchronous Multicast Delegate libraries.
+An integration test framework used for testing multi-threaded C++ based projects using Google Test and Asynchronous Multicast Delegate libraries. All target devices are supported including Windows, Linux, and embedded systems.
 
 ## Overview
 Testing mission critical software is crucial. For medical devices, the IEC 62304 provides guidance on the required software development process. Three levels of software testing are defined:
@@ -77,9 +77,9 @@ Software systems are complex, with numerous library and file dependencies, makin
 
 In my experience with medical device design, integration testing was typically performed by a software developer using a custom, one-off test setup that was manually executed and documented. These tests were not automated and were rarely, if ever, repeated. By applying the ideas and techniques outlined here, integration tests can be written and executed similarly to unit tests, providing a more robust and repeatable testing infrastructure.
 
-While unit tests are typically executed off-target, the integration test framework presented here runs on-target, in parallel with normal device operation. The tests can be executed in a special maintenance mode, when the system is idle, or alongside normal operations. Regardless of the mode, the tests run directly on the device, with results captured accordingly. In some cases, the test results are sent to an external logging machine via Ethernet or serial ports. In this project, the results are output to the screen.
+While unit tests are typically executed off-target, the integration test framework presented here runs on-target, in parallel with normal device operation. The target device may be Windows, Linux or an embedded system. The tests can be executed in a special maintenance mode, when the system is idle, or alongside normal operations. Regardless of the mode, the tests run directly on the device, with results captured accordingly. In some cases, the test results are sent to an external logging machine via Ethernet or serial ports. In this project, the results are output to the screen.
 
-As more integration tests are created, the product's executable image size increases. To manage this, the tests are distributed across multiple images, each with a specific purpose. For example, one image might test a logging subsystem, while another tests the alarm subsystem. Distributing the integration tests across multiple builds helps keep the image size manageable.
+As more integration tests are created, the product's executable image size increases. To manage this, the tests are distributed across multiple images, each with a specific purpose. For example, one image might test a logging subsystem, while another tests the alarm subsystem. Distributing the integration tests across multiple builds helps keep the image size manageable on memory constrained devices.
 
 ## Delegates
 The Delegate library offers both synchronous and asynchronous function invocation, typically utilized in two design patterns:
@@ -92,13 +92,14 @@ See [Asynchronous Multicast Delegates (C++17)](https://github.com/endurodave/Asy
 ## Integration Tests
 The integration tests are contained within `Logger_IT.cc`. All tests follow a similar pattern:
 
-1. **Setup** - perform setup actions such as register for a callback, clear result data, or invoke the test function.
-2. **Wait** - wait for the subsystem to respond with test results, either synchronously or asynchronously during a callback.
-3. **Check** - check the test results for success or failure.
-3. **Cleanup** - cleanup the test such as unregister for callbacks.
+1. **Setup** - perform setup actions such as register for a callback or clear result data.
+2. **Test** - invoke the function(s) under test to initiate testing.
+3. **Wait** - wait for the subsystem to respond with test results, either synchronously or asynchronously during a callback.
+4. **Check** - check the test results for success or failure.
+5. **Cleanup** - cleanup the test such as unregister from callbacks.
 
 ### Write Test
-The first `Write` test is shown below. Notice the `Write` function is called, then the test waits for 500mS and 2000mS for callbacks before checking test results. If the `WaitForSignal()` returns `false`, the `LoggerSystemCb()` failed to arrive within the allotted time.
+The `Write` test is shown below. Notice the `Write` function is called, then the test waits for 500mS and 2000mS for callbacks before checking test results. If the `WaitForSignal()` returns `false`, the `LoggerSystemCb()` failed to arrive within the allotted time.
 
 ```cpp
 // Logger callback handler function invoked from Logger thread context
@@ -146,7 +147,7 @@ Note that all `Logger_IT` tests execute within the `IntegrationTest` thread, whi
 Additionally, observe how easily the integration test is constructed. It resembles a standard unit test, but utilizes two threads, with the Delegate library providing support for cross-thread function invocation.
 
 ### Flush Test
-The `Flush` integration test is an example of targeting a non-thread safe subsystem internal module using the Delegate library. `MakeDelegate` creates a asynchronous blocking delegate targeted at `LogData::Flush()`. The `Logger` task invokes the function and the return value is stored in `retVal`. If `retVal.has_value()` is `true` the asynchronous function call succeed within 100mS. If `false`, the call failed to invoke within the allotted time frame. The `retVal.value()` contains the `LogData::Flush()` return value. The Delegate library makes invoking any function on a different thread very easy.
+The `Flush` integration test is an example of targeting a non-thread safe subsystem internal module using the Delegate library. `MakeDelegate` creates an asynchronous blocking delegate targeted at `LogData::Flush()`. The `Logger` task invokes the function and the return value is stored in `retVal`. If `retVal.has_value()` is `true` the asynchronous function call succeed within 100mS. If `false`, the call failed to invoke within the allotted time frame. The `retVal.value()` contains the `LogData::Flush()` return value. The Delegate library makes invoking any function on a different thread very easy.
 
 ```cpp
 // Test LogData::Flush() subsystem internal class. The internal LogData class is 
@@ -443,7 +444,7 @@ void Logger::Process()
 				break;
 			}
 
-            case MSG_TIMER:
+			case MSG_TIMER:
 			{
 				// Flush data to disk when timer expires
 				bool success = m_logData.Flush();
@@ -477,7 +478,7 @@ void Logger::Process()
 			}
 #endif
 
-		    case MSG_EXIT_THREAD:
+			case MSG_EXIT_THREAD:
 			{
 				m_timerExit = true;
 				timerThread.join();
@@ -525,7 +526,7 @@ public:
     /// etc...
 ```
 
-## Integration Test Framework
+## Integration Test Runtime
 The integration tests are executed on the `IntegrationTest` thread.
 
 ```cpp
