@@ -13,7 +13,7 @@
 // 
 // Logger is the hypothetical production subsystem under test. Code marked within IT_ENABLE 
 // conditional compile is the code necessary to support integration testing of the 
-// production code. It is assumed 
+// production code. 
 
 #include "Logger.h"
 #include <iostream>
