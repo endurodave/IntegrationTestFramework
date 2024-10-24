@@ -2,15 +2,15 @@
 An integration test framework used for testing multi-threaded C++ based projects using Google Test and Asynchronous Multicast Delegate libraries.
 
 ## Overview
-Testing mission critical software is crucial. For medical devices, the IEC 62304 provided guidance on the required software development process. Three levels of software testing are defined:
+Testing mission critical software is crucial. For medical devices, the IEC 62304 provides guidance on the required software development process. Three levels of software testing are defined:
 
-1. **Unit Testing** - Verifies the correctness of individual units of code in isolation.
-2. **Integration Testing** - Tests how different units of code interact and work together.
-3. **System Testing** - Evaluates the entire system as a whole to ensure it meets specified requirements.
+1. **Unit Testing** - Verifies individual units of code in isolation.
+2. **Integration Testing** - Tests multiple units of code integrated and working together.
+3. **System Testing** - Evaluates system as a whole to ensure it meets specified requirements.
 
-Unit testing is well understood, with numerous frameworks (including Google Test) readily available and easily incorporated into a CI/CD toolchain pipeline. System testing is also well-documented, with various techniques and tools available. However, in my experience, integration testing is more challenging to write.
+Unit testing is well understood, with numerous frameworks (including Google Test) readily available and easily incorporated into a CI/CD toolchain pipeline. System testing is also well-documented, with various techniques and tools available. However, in my experience, integration testing is more challenging to create.
 
-This project implements an integration testing framework for multi-threaded C++ applications, compatible with any system supporting C++, including Windows and Linux. It has no external OS dependencies or libraries beyond the standard C++ library. Multi-threading is achieved using the C++ thread support library, eliminating the need for OS-specific dependencies.
+This project implements an integration testing framework for multi-threaded C++ applications, compatible with any system supporting C++, including Windows and Linux. It has no external OS dependencies or libraries beyond the standard C++ library. Multi-threading is achieved using the C++ thread support library, eliminating the need for OS-specific dependencies. Alternatively, write a small amount of code to port the framework to any PC or embedded operating system.
 
 ## References
 * [Goolge Test](https://github.com/google/googletest) - Google Test is a C++ unit testing framework that provides an API for writing and running unit tests.
@@ -62,7 +62,7 @@ The project contains the following directories:
 * **Port** - supporting utilities source code files
 
 ## CMake Build
-CMake is used to create the project build files. See `CMakeLists.txt` for more information.
+[CMake](https://cmake.org/) is used to create the project build files. See `CMakeLists.txt` for more information.
 
 ### Windows Visual Studio
 
@@ -93,7 +93,7 @@ See [Asynchronous Multicast Delegates (C++17)](https://github.com/endurodave/Asy
 The integration tests are contained within `Logger_IT.cc`. All tests follow a similar pattern:
 
 1. **Setup** - perform setup actions such as register for a callback, clear result data, or invoke the test function.
-2. **Wait** - wait for the subsystem to respond with test results, typically during a callback.
+2. **Wait** - wait for the subsystem to respond with test results, either synchronously or asynchronously during a callback.
 3. **Check** - check the test results for success or failure.
 3. **Cleanup** - cleanup the test such as unregister for callbacks.
 
@@ -174,7 +174,7 @@ TEST(Logger_IT, Flush)
 ### FlushTime Test
 The `FlushTime` tests how long the system takes to execute `Flush()` enforcing a runtime timing constraint.
 
-The production code within `LogData` was modified to add the `FlushTimeDelegate` member. All code modifications to support integration testing are wrapped in the conditional compile flag `IT_ENABLE`.
+The production code within `LogData` was modified to add the `FlushTimeDelegate` member. All production code modifications to support integration testing are wrapped in the conditional compile flag `IT_ENABLE`.
 
 ```cpp
 class LogData
@@ -359,6 +359,38 @@ TEST(Logger_IT, FlushTimeSimplified)
 	Logger::GetInstance().m_logData.FlushTimeDelegate -= MakeDelegate(&FlushTimeCb);
 }
 ```
+
+### FlushTestSimplifiedWithLambda Test
+The `FlushTestSimplifiedWithLambda` example is identical to the previous test but uses a local lambda callback function. Sometimes a callback is only needed within a single test, and using a lambda function helps keep all the test code centralized in one place.
+
+```cpp
+// Exact same test as FlushTimeSimplified above, but use a private lambda callback 
+// function to centralize the callback inside the test case. 
+TEST(Logger_IT, FlushTimeSimplifiedWithLambda)
+{
+	// Logger callback handler lambda function invoked from Logger thread context
+	auto FlushTimeLambdaCb = +[](milliseconds duration) -> void
+	{
+		// Protect flushTime against multiple thread access by IntegrationTest 
+		// thread and Logger thread
+		lock_guard<mutex> lock(mtx);
+
+		// Save the flush time
+		flushDuration = duration;
+	};
+
+	{
+		// Protect access to flushDuration
+		lock_guard<mutex> lock(mtx);
+		flushDuration = milliseconds(-1);
+	}
+
+	// Register for a callback from Logger thread
+	Logger::GetInstance().m_logData.FlushTimeDelegate += MakeDelegate(FlushTimeLambdaCb);
+
+    // etc...
+```
+
 ### Integration Test Results
 The integration test results are output to the console. 
 
@@ -371,7 +403,7 @@ The system has two threads:
 2. `IntegrationTest`
 
 ### Logger Thread
-The `Logger` thread main loop is shown below. The `MSG_DISPATCH_DELEGATE` was added to handle dispatching all delegate function invocations onto the `Logger` thread.
+The `Logger` thread main loop is shown below. The `MSG_DISPATCH_DELEGATE` case was added to handle dispatching *all* delegate function invocations onto the `Logger` thread.
 
 ```cpp
 void Logger::Process()
@@ -470,11 +502,11 @@ public:
 	virtual ~DelegateThread() = default;
 
 	/// Dispatch a DelegateMsg onto this thread. The implementer is responsible
-	/// for getting the DelegateMsg into an OS message queue. Once DelegateMsg
+	/// for getting the DelegateMsgBase into an OS message queue. Once DelegateMsgBase
 	/// is on the correct thread of control, the DelegateInvoker::DelegateInvoke() function
 	/// must be called to execute the callback. 
 	/// @param[in] msg - a pointer to the callback message that must be created dynamically.
-	/// @pre Caller *must* create the DelegateMsg argument dynamically.
+	/// @pre Caller *must* create the DelegateMsgBase argument dynamically.
 	/// @post The destination thread calls DelegateInvoke().
 	virtual void DispatchDelegate(std::shared_ptr<DelegateMsgBase> msg) = 0;
 };
@@ -516,4 +548,4 @@ void IntegrationTest::Run()
 Include `UI_Client.h` in any production module that requires integration test support.
 
 ## Conclusion
-Developing a user-friendly integration testing framework that mirrors the simplicity of unit testing can be challenging. This document outlines a solution that leverages the established Google Test and Delegate libraries to achieve this goal.
+Developing a user-friendly integration testing framework that mirrors the simplicity of unit testing can be challenging. This document outlines a solution that leverages Google Test and Delegate libraries to achieve this goal.

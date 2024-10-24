@@ -249,9 +249,9 @@ void Logger::Process()
 
 			case MSG_EXIT_THREAD:
 			{
-                m_timerExit = true;
-                timerThread.join();
-                return;
+				m_timerExit = true;
+				timerThread.join();
+				return;
 			}
 
 			default:

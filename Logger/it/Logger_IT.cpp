@@ -215,5 +215,73 @@ TEST(Logger_IT, FlushTimeSimplified)
 	Logger::GetInstance().m_logData.FlushTimeDelegate -= MakeDelegate(&FlushTimeCb);
 }
 
+
+// Exact same test as FlushTimeSimplified above, but use a private lambda callback 
+// function to centralize the callback inside the test case. 
+TEST(Logger_IT, FlushTimeSimplifiedWithLambda)
+{
+	// Logger callback handler lambda function invoked from Logger thread context
+	auto FlushTimeLambdaCb = +[](milliseconds duration) -> void
+	{
+		// Protect flushTime against multiple thread access by IntegrationTest 
+		// thread and Logger thread
+		lock_guard<mutex> lock(mtx);
+
+		// Save the flush time
+		flushDuration = duration;
+	};
+
+	{
+		// Protect access to flushDuration
+		lock_guard<mutex> lock(mtx);
+		flushDuration = milliseconds(-1);
+	}
+
+	// Register for a callback from Logger thread
+	Logger::GetInstance().m_logData.FlushTimeDelegate += MakeDelegate(FlushTimeLambdaCb);
+
+	// Clear the m_msgData list on Logger thread
+	auto retVal1 = AsyncInvoke(
+		&Logger::GetInstance().m_logData.m_msgData,	// Object instance
+		&std::list<std::string>::clear,				// Object function
+		Logger::GetInstance(),						// Thread to invoke object function
+		milliseconds(50));							// Wait up to 50mS for async invoke
+
+	// Write 10 lines of log data
+	for (int i = 0; i < 10; i++)
+	{
+		//  Call LogData::Write on Logger thread
+		auto retVal = AsyncInvoke(
+			&Logger::GetInstance().m_logData,
+			&LogData::Write,
+			Logger::GetInstance(),
+			milliseconds(50),
+			"Flush Timer String");
+
+		// Check that LogData::Write returned true
+		if (retVal.has_value())
+			EXPECT_TRUE(retVal.value());
+	}
+
+	// Call LogData::Flush on Logger thread
+	auto retVal2 = AsyncInvoke(
+		&Logger::GetInstance().m_logData,
+		&LogData::Flush,
+		Logger::GetInstance(),
+		milliseconds(100));
+
+	{
+		// Protect access to flushDuration
+		lock_guard<mutex> lock(mtx);
+
+		// Check that flush executed in 10mS or less
+		EXPECT_GE(flushDuration, std::chrono::milliseconds(0));
+		EXPECT_LE(flushDuration, std::chrono::milliseconds(10));
+	}
+
+	// Unregister from callback
+	Logger::GetInstance().m_logData.FlushTimeDelegate -= MakeDelegate(FlushTimeLambdaCb);
+}
+
 // Dummy function to force linker to keep the code in this file
 void Logger_IT_ForceLink() { }
