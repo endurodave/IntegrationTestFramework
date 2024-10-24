@@ -68,9 +68,13 @@ The project contains the following directories:
 
 `cmake -G "Visual Studio 17 2022" -A Win32 -B ../IntegrationTestFrameworkBuild -S . -DENABLE_IT=ON`
 
+![Windows Build](Figure2.jpg)
+
 ### Linux Make 
 
 `cmake -G "Unix Makefiles" -B ../IntegrationTestFrameworkBuild -S . -DENABLE_IT=ON`
+
+![Linux Build](Figure3.jpg)
 
 ## Testing Strategy  
 Software systems are complex, with numerous library and file dependencies, making integration testing challenging. It can be difficult to isolate and test a subsystem that consists of dozens or even hundreds of source files. This complexity is further compounded when the source code is intended to run only on an embedded target. While unit tests can isolate individual modules, integration testing increases complexity exponentially.
