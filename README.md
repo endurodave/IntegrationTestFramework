@@ -527,6 +527,30 @@ public:
 ```
 
 ## Integration Test Runtime
+The application `main()` includes integration test code of `IT_ENABLE` is defined.
+
+```cpp
+int main(void)
+{
+#ifdef IT_ENABLE
+	// Dummy function call to prevent linker from discarding Logger_IT code
+	Logger_IT_ForceLink();
+
+	IntegrationTest::GetInstance();
+#endif
+
+	// Instantiate subsystems
+	Logger::GetInstance();
+
+#ifdef IT_ENABLE
+	// Wait for integration tests to complete
+	while (!IntegrationTest::GetInstance().IsComplete())
+		this_thread::sleep_for(std::chrono::seconds(1));
+#endif
+
+	return 0;
+}
+```
 The integration tests are executed on the `IntegrationTest` thread.
 
 ```cpp
