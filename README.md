@@ -27,7 +27,7 @@ This example utilizes the C++17 and higher delegate library. Alternate delegate 
 * [Asynchronous Multicast Delegates (C++03)](https://github.com/endurodave/AsyncMulticastDelegate) - A C++03 and higher compliant delegate library capable of targeting any callable function synchronously or asynchronously.
 
 ## Logger Subsystem
-The `Logger` class is the subsystem public interface. `Logger` executes in its own thread of control. The `Write()` API is thread-safe. 
+A simple string logging subsystem is used to illustrated the integration test concepts. The `Logger` class is the subsystem public interface. `Logger` executes in its own thread of control. The `Write()` API is thread-safe. 
 
 * `void Write(const std::string& msg)`
 
@@ -408,7 +408,24 @@ The system has two threads:
 2. `IntegrationTest`
 
 ### Logger Thread
-The `Logger` thread main loop is shown below. The `MSG_DISPATCH_DELEGATE` case was added to handle dispatching *all* delegate function invocations onto the `Logger` thread.
+`Logger::DispatchDelegate()` pushes the delegate message into `Logger.m_queue`. The delegate library calls this function to invoke a function asynchronously.
+
+```cpp
+void Logger::DispatchDelegate(std::shared_ptr<DelegateLib::DelegateMsgBase> msg)
+{
+	ASSERT_TRUE(m_thread);
+
+	// Create a new ThreadMsg
+	std::shared_ptr<DelegateMsg> threadMsg(new DelegateMsg(MSG_DISPATCH_DELEGATE, msg));
+
+	// Add dispatch delegate msg to queue and notify worker thread
+	std::unique_lock<std::mutex> lk(m_mutex);
+	m_queue.push(threadMsg);
+	m_cv.notify_one();
+}
+```
+
+The `Logger` thread main loop is shown below. The `MSG_DISPATCH_DELEGATE` case dispatches *all* delegate function invocations onto the `Logger` thread.
 
 ```cpp
 void Logger::Process()
@@ -477,7 +494,7 @@ void Logger::Process()
 				auto delegateMsgBase = delegateMsg->GetMsg();
 
 				// Invoke the delegate target function on the target thread context
-			    delegateMsgBase->GetDelegateInvoker()->DelegateInvoke(delegateMsgBase);
+				delegateMsgBase->GetDelegateInvoker()->DelegateInvoke(delegateMsgBase);
 				break;
 			}
 #endif
@@ -531,7 +548,7 @@ public:
 ```
 
 ## Integration Test Runtime
-The application `main()` includes integration test code of `IT_ENABLE` is defined.
+The application `main()` includes integration test code if `IT_ENABLE` is defined.
 
 ```cpp
 int main(void)
