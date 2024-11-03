@@ -1,7 +1,35 @@
 # Integration Test Framework using Google Test and Delegates
 An integration test framework used for testing multi-threaded C++ based projects using Google Test and Asynchronous Multicast Delegate libraries. All target devices are supported including Windows, Linux, and embedded systems.
 
-## Overview
+# Table of Contents
+
+- [Integration Test Framework using Google Test and Delegates](#integration-test-framework-using-google-test-and-delegates)
+- [Table of Contents](#table-of-contents)
+- [Overview](#overview)
+  - [References](#references)
+  - [Alternative Delegate Libraries](#alternative-delegate-libraries)
+- [Logger Subsystem](#logger-subsystem)
+- [Source Code](#source-code)
+- [CMake Build](#cmake-build)
+  - [Windows Visual Studio](#windows-visual-studio)
+  - [Linux Make](#linux-make)
+- [Testing Strategy](#testing-strategy)
+- [Delegates](#delegates)
+- [Integration Tests](#integration-tests)
+  - [Write Test](#write-test)
+  - [Flush Test](#flush-test)
+  - [FlushTime Test](#flushtime-test)
+  - [FlushTestSimplified Test](#flushtestsimplified-test)
+  - [FlushTestSimplifiedWithLambda Test](#flushtestsimplifiedwithlambda-test)
+  - [Integration Test Results](#integration-test-results)
+- [Threads](#threads)
+  - [Logger Thread](#logger-thread)
+  - [IntegrationTest Thread](#integrationtest-thread)
+- [Integration Test Runtime](#integration-test-runtime)
+- [Conclusion](#conclusion)
+
+
+# Overview
 Testing mission critical software is crucial. For medical devices, the IEC 62304 provides guidance on the required software development process. Three levels of software testing are defined:
 
 1. **Unit Testing** - Verifies individual units of code in isolation.
@@ -19,14 +47,14 @@ This project implements an integration testing framework for multi-threaded C++ 
 
 * [C++ std::thread Event Loop](https://github.com/endurodave/StdWorkerThread) - A worker thread using the C++ thread support library.
 
-### Alternative Delegate Libraries
+## Alternative Delegate Libraries
 This example utilizes the C++17 and higher delegate library. Alternate delegate libraries exist for lower-spec toolchains. All delegate libraries operate on Windows, Linux and other platforms.
 
 * [Asynchronous Multicast Delegates (C++11)](https://github.com/endurodave/AsyncMulticastDelegateCpp11) - A C++11 and higher compliant delegate library capable of targeting any callable function synchronously or asynchronously.
 
 * [Asynchronous Multicast Delegates (C++03)](https://github.com/endurodave/AsyncMulticastDelegate) - A C++03 and higher compliant delegate library capable of targeting any callable function synchronously or asynchronously.
 
-## Logger Subsystem
+# Logger Subsystem
 A simple string logging subsystem is used to illustrated the integration test concepts. The `Logger` class is the subsystem public interface. `Logger` executes in its own thread of control. The `Write()` API is thread-safe. 
 
 * `void Write(const std::string& msg)`
@@ -51,7 +79,7 @@ public:
 
 The goal of the project is to provide an integration test framework with a simple example of testing the `Logger` subsystem in a multi-threaded environment.
 
-## Source Code
+# Source Code
 The project contains the following directories:
 
 * **Delegate** - the Delegate library source code directory
@@ -61,22 +89,22 @@ The project contains the following directories:
 * **Logger/src** - the Logger subsystem production source code
 * **Port** - supporting utilities source code files
 
-## CMake Build
+# CMake Build
 [CMake](https://cmake.org/) is used to create the project build files. See `CMakeLists.txt` for more information.
 
-### Windows Visual Studio
+## Windows Visual Studio
 
 `cmake -G "Visual Studio 17 2022" -A Win32 -B ../IntegrationTestFrameworkBuild -S . -DENABLE_IT=ON`
 
 ![Windows Build](Figure2.jpg)
 
-### Linux Make 
+## Linux Make 
 
 `cmake -G "Unix Makefiles" -B ../IntegrationTestFrameworkBuild -S . -DENABLE_IT=ON`
 
 ![Linux Build](Figure3.jpg)
 
-## Testing Strategy  
+# Testing Strategy  
 Software systems are complex, with numerous library and file dependencies, making integration testing challenging. It can be difficult to isolate and test a subsystem that consists of dozens or even hundreds of source files. This complexity is further compounded when the source code is intended to run only on an embedded target. While unit tests can isolate individual modules, integration testing increases complexity exponentially.
 
 In my experience with medical device design, integration testing was typically performed by a software developer using a custom, one-off test setup that was manually executed and documented. These tests were not automated and were rarely, if ever, repeated. By applying the ideas and techniques outlined here, integration tests can be written and executed similarly to unit tests, providing a more robust and repeatable testing infrastructure.
@@ -85,7 +113,7 @@ While unit tests are typically executed off-target, the integration test framewo
 
 As more integration tests are created, the product's executable image size increases. To manage this, the tests are distributed across multiple images, each with a specific purpose. For example, one image might test a logging subsystem, while another tests the alarm subsystem. Distributing the integration tests across multiple builds helps keep the image size manageable on memory constrained devices.
 
-## Delegates
+# Delegates
 The Delegate library offers both synchronous and asynchronous function invocation, typically utilized in two design patterns:
 
 * **Publish/Subscribe** - publisher exposes a delegate container to allow subscriber callbacks via anonymous runtime registration.
@@ -93,7 +121,7 @@ The Delegate library offers both synchronous and asynchronous function invocatio
 
 See [Asynchronous Multicast Delegates (C++17)](https://github.com/endurodave/AsyncMulticastDelegateModern) for more information.
 
-## Integration Tests
+# Integration Tests
 The integration tests are contained within `Logger_IT.cc`. All tests follow a similar pattern:
 
 1. **Setup** - perform setup actions such as register for a callback or clear result data.
@@ -102,7 +130,7 @@ The integration tests are contained within `Logger_IT.cc`. All tests follow a si
 4. **Check** - check the test results for success or failure.
 5. **Cleanup** - cleanup the test such as unregister from callbacks.
 
-### Write Test
+## Write Test
 The `Write` test is shown below. Notice the `Write` function is called, then the test waits for 500mS and 2000mS for callbacks before checking test results. If the `WaitForSignal()` returns `false`, the `LoggerSystemCb()` failed to arrive within the allotted time.
 
 ```cpp
@@ -150,7 +178,7 @@ Note that all `Logger_IT` tests execute within the `IntegrationTest` thread, whi
 
 Additionally, observe how easily the integration test is constructed. It resembles a standard unit test, but utilizes two threads, with the Delegate library providing support for cross-thread function invocation.
 
-### Flush Test
+## Flush Test
 The `Flush` integration test is an example of targeting a non-thread safe subsystem internal module using the Delegate library. `MakeDelegate` creates an asynchronous blocking delegate targeted at `LogData::Flush()`. The `Logger` task invokes the function and the return value is stored in `retVal`. If `retVal.has_value()` is `true` the asynchronous function call succeed within 100mS. If `false`, the call failed to invoke within the allotted time frame. The `retVal.value()` contains the `LogData::Flush()` return value. The Delegate library makes invoking any function on a different thread very easy.
 
 ```cpp
@@ -176,7 +204,7 @@ TEST(Logger_IT, Flush)
 }
 ```
 
-### FlushTime Test
+## FlushTime Test
 The `FlushTime` tests how long the system takes to execute `Flush()` enforcing a runtime timing constraint.
 
 The production code within `LogData` was modified to add the `FlushTimeDelegate` member. All production code modifications to support integration testing are wrapped in the conditional compile flag `IT_ENABLE`.
@@ -304,7 +332,7 @@ TEST(Logger_IT, FlushTime)
 }
 ```
 
-### FlushTestSimplified Test
+## FlushTestSimplified Test
 The `FlushTestSimplified` example is identical to the previous test but uses the simplified syntax provided by the `AsyncInvoke<>` helper class. This class automatically handles asynchronous call timeouts and reports test failures if necessary.
 
 ```cpp
@@ -365,7 +393,7 @@ TEST(Logger_IT, FlushTimeSimplified)
 }
 ```
 
-### FlushTestSimplifiedWithLambda Test
+## FlushTestSimplifiedWithLambda Test
 The `FlushTestSimplifiedWithLambda` example is identical to the previous test but uses a local lambda callback function. Sometimes a callback is only needed within a single test, and using a lambda function helps keep all the test code centralized in one place.
 
 ```cpp
@@ -396,18 +424,18 @@ TEST(Logger_IT, FlushTimeSimplifiedWithLambda)
     // etc...
 ```
 
-### Integration Test Results
+## Integration Test Results
 The integration test results are output to the console. 
 
 ![Integration Test Results](Figure1.jpg)
 
-## Threads
+# Threads
 The system has two threads:
 
 1. `Logger`
 2. `IntegrationTest`
 
-### Logger Thread
+## Logger Thread
 `Logger::DispatchDelegate()` pushes the delegate message into `Logger.m_queue`. The delegate library calls this function to invoke a function asynchronously.
 
 ```cpp
@@ -534,7 +562,7 @@ public:
 };
 ```
 
-### IntegrationTest Thread
+## IntegrationTest Thread
 The `IntegrationTest` thread has-a `WorkerThread` instance which, unlike `Logger`, is designed specifically for delegate-based usage.
 
 ```cpp
@@ -547,7 +575,7 @@ public:
     /// etc...
 ```
 
-## Integration Test Runtime
+# Integration Test Runtime
 The application `main()` includes integration test code if `IT_ENABLE` is defined.
 
 ```cpp
@@ -593,5 +621,5 @@ void IntegrationTest::Run()
 
 Include `UI_Client.h` in any production module that requires integration test support.
 
-## Conclusion
+# Conclusion
 Developing a user-friendly integration testing framework that mirrors the simplicity of unit testing can be challenging. This document outlines a solution that leverages Google Test and Delegate libraries to achieve this goal.
