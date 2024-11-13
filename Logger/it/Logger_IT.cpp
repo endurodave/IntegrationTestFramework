@@ -37,6 +37,10 @@ void FlushTimeCb(milliseconds duration)
 // Logger callback handler function invoked from Logger thread context
 void LoggerStatusCb(const string& status)
 {
+	// Protect callbackStatus against multiple thread access by IntegrationTest 
+	// thread and Logger thread
+	lock_guard<mutex> lock(mtx);
+
 	// Save logger callback status
 	callbackStatus.push_back(status);
 
@@ -62,11 +66,17 @@ TEST(Logger_IT, Write)
 	// Check test results
 	EXPECT_TRUE(success);
 	EXPECT_TRUE(success2);
-	EXPECT_EQ(callbackStatus.size(), 2);
-	if (callbackStatus.size() >= 2)
+
 	{
-		EXPECT_EQ(callbackStatus[0], "Write success!");
-		EXPECT_EQ(callbackStatus[1], "Flush success!");
+		// Protect access to callbackStatus
+		lock_guard<mutex> lock(mtx);
+
+		EXPECT_EQ(callbackStatus.size(), 2);
+		if (callbackStatus.size() >= 2)
+		{
+			EXPECT_EQ(callbackStatus[0], "Write success!");
+			EXPECT_EQ(callbackStatus[1], "Flush success!");
+		}
 	}
 
 	// Test cleanup
