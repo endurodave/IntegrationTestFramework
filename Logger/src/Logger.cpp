@@ -1,6 +1,10 @@
 #include "Logger.h"
 #include "Fault.h"
 
+#ifdef WIN32
+#include <Windows.h>
+#endif
+
 using namespace std;
 
 // Worker thread message ID's
@@ -91,7 +95,22 @@ void Logger::Write(const std::string& msg)
 bool Logger::CreateThread()
 {
 	if (!m_thread)
+	{
 		m_thread = std::unique_ptr<std::thread>(new thread(&Logger::Process, this));
+
+#ifdef WIN32
+		// Get the thread's native Windows handle
+		auto handle = m_thread->native_handle();
+
+		// Set the thread name so it shows in the Visual Studio Debug Location toolbar
+		std::wstring wstr(THREAD_NAME.begin(), THREAD_NAME.end());
+		HRESULT hr = SetThreadDescription(handle, wstr.c_str());
+		if (FAILED(hr))
+		{
+			// Handle error if needed
+		}
+#endif
+	}
 	return true;
 }
 

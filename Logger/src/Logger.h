@@ -11,6 +11,8 @@
 
 class Msg;
 
+/// @brief The Logger subsystem public interface class. Logger runs in its own
+/// thread of control. 
 class Logger 
 #ifdef IT_ENABLE
 	: public DelegateLib::DelegateThread
@@ -22,7 +24,7 @@ public:
 	/// Get the singleton logger instance
 	static Logger& GetInstance();
 
-	/// Write a message to the log
+	/// Write a message to the log. Function call is thread-safe. 
 	/// @param[in] msg - the message string to write
 	void Write(const std::string& msg);
 
@@ -80,7 +82,7 @@ IT_PRIVATE_ACCESS:
 	std::mutex m_mutex;
 	std::condition_variable m_cv;
     std::atomic<bool> m_timerExit;
-	const char* THREAD_NAME;
+	const std::string& THREAD_NAME;
 };
 
 #endif 
