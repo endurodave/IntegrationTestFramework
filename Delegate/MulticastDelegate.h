@@ -20,7 +20,7 @@ public:
     MulticastDelegate() = default;
     ~MulticastDelegate() { Clear(); }
 
-    void operator()(Args... args) {
+    RetType operator()(Args... args) {
         for (Delegate<RetType(Args...)>* delegate : m_delegates)
             (*delegate)(args...);	// Invoke delegate callback
     }
@@ -61,7 +61,7 @@ private:
     MulticastDelegate& operator=(const MulticastDelegate&) = delete;
 
     /// List of registered delegates
-    xlist<Delegate<RetType(Args...)>*> m_delegates;
+    std::list<Delegate<RetType(Args...)>*> m_delegates;
 };
 
 }
