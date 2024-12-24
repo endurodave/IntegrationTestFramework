@@ -1,3 +1,8 @@
+![License MIT](https://img.shields.io/github/license/BehaviorTree/BehaviorTree.CPP?color=blue)
+[![conan Ubuntu](https://github.com/endurodave/IntegrationTestFramework/actions/workflows/cmake_ubuntu.yml/badge.svg)](https://github.com/endurodave/IntegrationTestFramework/actions/workflows/cmake_ubuntu.yml)
+[![conan Ubuntu](https://github.com/endurodave/IntegrationTestFramework/actions/workflows/cmake_clang.yml/badge.svg)](https://github.com/endurodave/IntegrationTestFramework/actions/workflows/cmake_clang.yml)
+[![conan Windows](https://github.com/endurodave/IntegrationTestFramework/actions/workflows/cmake_windows.yml/badge.svg)](https://github.com/endurodave/IntegrationTestFramework/actions/workflows/cmake_windows.yml)
+
 # Integration Test Framework using Google Test and Delegates
 An integration test framework used for testing multi-threaded C++ based projects using Google Test and Asynchronous Multicast Delegate libraries. All target devices are supported including Windows, Linux, and embedded systems.
 
@@ -7,7 +12,6 @@ An integration test framework used for testing multi-threaded C++ based projects
 - [Table of Contents](#table-of-contents)
 - [Overview](#overview)
   - [References](#references)
-  - [Alternative Delegate Libraries](#alternative-delegate-libraries)
 - [Logger Subsystem](#logger-subsystem)
 - [Source Code](#source-code)
 - [CMake Build](#cmake-build)
@@ -43,16 +47,9 @@ This project implements an integration testing framework for multi-threaded C++ 
 ## References
 * [Goolge Test](https://github.com/google/googletest) - Google Test is a C++ unit testing framework that provides an API for writing and running unit tests.
 
-* [Asynchronous Multicast Delegates (C++17)](https://github.com/endurodave/AsyncMulticastDelegateModern) - A C++ standards compliant delegate library capable of targeting any callable function synchronously or asynchronously.
+* [Asynchronous Multicast Delegates](https://github.com/endurodave/cpp-async-delegate) - A C++ standards compliant delegate library capable of targeting any callable function synchronously or asynchronously.
 
 * [C++ std::thread Event Loop](https://github.com/endurodave/StdWorkerThread) - A worker thread using the C++ thread support library.
-
-## Alternative Delegate Libraries
-This example utilizes the C++17 and higher delegate library. Alternate delegate libraries exist for lower-spec toolchains. All delegate libraries operate on Windows, Linux and other platforms.
-
-* [Asynchronous Multicast Delegates (C++11)](https://github.com/endurodave/AsyncMulticastDelegateCpp11) - A C++11 and higher compliant delegate library capable of targeting any callable function synchronously or asynchronously.
-
-* [Asynchronous Multicast Delegates (C++03)](https://github.com/endurodave/AsyncMulticastDelegate) - A C++03 and higher compliant delegate library capable of targeting any callable function synchronously or asynchronously.
 
 # Logger Subsystem
 A simple string logging subsystem is used to illustrated the integration test concepts. The `Logger` class is the subsystem public interface. `Logger` executes in its own thread of control. The `Write()` API is thread-safe. 

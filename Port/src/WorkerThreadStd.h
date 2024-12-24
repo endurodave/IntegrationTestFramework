@@ -1,8 +1,6 @@
 #ifndef _THREAD_STD_H
 #define _THREAD_STD_H
 
-#ifdef IT_ENABLE
-
 // @see https://github.com/endurodave/StdWorkerThread
 // David Lafreniere, Feb 2017.
 
@@ -20,7 +18,7 @@ class WorkerThread : public DelegateLib::DelegateThread
 {
 public:
 	/// Constructor
-	WorkerThread(const char* threadName);
+	WorkerThread(const std::string& threadName);
 
 	/// Destructor
 	~WorkerThread();
@@ -38,7 +36,13 @@ public:
 	/// Get the ID of the currently executing thread
 	static std::thread::id GetCurrentThreadId();
 
-	virtual void DispatchDelegate(std::shared_ptr<DelegateLib::DelegateMsgBase> msg);
+	/// Get thread name
+	std::string GetThreadName() { return THREAD_NAME; }
+
+	/// Get size of thread message queue.
+	size_t GetQueueSize();
+
+	virtual void DispatchDelegate(std::shared_ptr<DelegateLib::DelegateMsg> msg);
 
 private:
 	WorkerThread(const WorkerThread&) = delete;
@@ -57,8 +61,6 @@ private:
     std::atomic<bool> m_timerExit;
 	const std::string THREAD_NAME;
 };
-
-#endif 
 
 #endif 
 

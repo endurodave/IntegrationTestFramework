@@ -1,5 +1,3 @@
-#ifdef IT_ENABLE
-
 #include "DelegateOpt.h"
 #include "WorkerThreadStd.h"
 #include "ThreadMsg.h"
@@ -19,7 +17,7 @@ using namespace DelegateLib;
 //----------------------------------------------------------------------------
 // WorkerThread
 //----------------------------------------------------------------------------
-WorkerThread::WorkerThread(const char* threadName) : m_thread(nullptr), m_timerExit(false), THREAD_NAME(threadName)
+WorkerThread::WorkerThread(const std::string& threadName) : m_thread(nullptr), m_timerExit(false), THREAD_NAME(threadName)
 {
 }
 
@@ -47,7 +45,7 @@ bool WorkerThread::CreateThread()
 		// Set the thread name so it shows in the Visual Studio Debug Location toolbar
 		std::wstring wstr(THREAD_NAME.begin(), THREAD_NAME.end());
 		HRESULT hr = SetThreadDescription(handle, wstr.c_str());
-		if (FAILED(hr)) 
+		if (FAILED(hr))
 		{
 			// Handle error if needed
 		}
@@ -61,7 +59,9 @@ bool WorkerThread::CreateThread()
 //----------------------------------------------------------------------------
 std::thread::id WorkerThread::GetThreadId()
 {
-	ASSERT_TRUE(m_thread != nullptr);
+	if (m_thread == nullptr)
+		throw std::invalid_argument("Thread pointer is null");
+
 	return m_thread->get_id();
 }
 
@@ -71,6 +71,15 @@ std::thread::id WorkerThread::GetThreadId()
 std::thread::id WorkerThread::GetCurrentThreadId()
 {
 	return this_thread::get_id();
+}
+
+//----------------------------------------------------------------------------
+// GetQueueSize
+//----------------------------------------------------------------------------
+size_t WorkerThread::GetQueueSize()
+{
+	lock_guard<mutex> lock(m_mutex);
+	return m_queue.size();
 }
 
 //----------------------------------------------------------------------------
@@ -98,9 +107,10 @@ void WorkerThread::ExitThread()
 //----------------------------------------------------------------------------
 // DispatchDelegate
 //----------------------------------------------------------------------------
-void WorkerThread::DispatchDelegate(std::shared_ptr<DelegateLib::DelegateMsgBase> msg)
+void WorkerThread::DispatchDelegate(std::shared_ptr<DelegateLib::DelegateMsg> msg)
 {
-	ASSERT_TRUE(m_thread);
+	if (m_thread == nullptr)
+		throw std::invalid_argument("Thread pointer is null");
 
 	// Create a new ThreadMsg
     std::shared_ptr<ThreadMsg> threadMsg(new ThreadMsg(MSG_DISPATCH_DELEGATE, msg));
@@ -157,13 +167,16 @@ void WorkerThread::Process()
 		{
 			case MSG_DISPATCH_DELEGATE:
 			{
-				ASSERT_TRUE(msg->GetData() != NULL);
-
-				// Convert the ThreadMsg void* data back to a DelegateMsg* 
+				// Get pointer to DelegateMsg data from queue msg data
                 auto delegateMsg = msg->GetData();
+				ASSERT_TRUE(delegateMsg);
 
-				// Invoke the callback on the target thread
-				delegateMsg->GetDelegateInvoker()->DelegateInvoke(delegateMsg);
+				auto invoker = delegateMsg->GetDelegateInvoker();
+				ASSERT_TRUE(invoker);
+
+				// Invoke the delegate destination target function
+				bool success = invoker->Invoke(delegateMsg);
+				ASSERT_TRUE(success);
 				break;
 			}
 
@@ -179,9 +192,8 @@ void WorkerThread::Process()
 			}
 
 			default:
-				ASSERT();
+				throw std::invalid_argument("Invalid message ID");
 		}
 	}
 }
 
-#endif

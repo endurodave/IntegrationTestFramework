@@ -40,11 +40,11 @@ private:
 class DelegateMsg : public Msg
 {
 public:
-	DelegateMsg(int id, std::shared_ptr<DelegateLib::DelegateMsgBase> data) : Msg(id), m_data(data) { }
-	std::shared_ptr<DelegateLib::DelegateMsgBase> GetMsg() { return m_data; }
+	DelegateMsg(int id, std::shared_ptr<DelegateLib::DelegateMsg> data) : Msg(id), m_data(data) { }
+	std::shared_ptr<DelegateLib::DelegateMsg> GetMsg() { return m_data; }
 
 private:
-	std::shared_ptr<DelegateLib::DelegateMsgBase> m_data;
+	std::shared_ptr<DelegateLib::DelegateMsg> m_data;
 };
 #endif
 
@@ -157,7 +157,7 @@ void Logger::ExitThread()
 // DispatchDelegate
 //----------------------------------------------------------------------------
 #ifdef IT_ENABLE
-void Logger::DispatchDelegate(std::shared_ptr<DelegateLib::DelegateMsgBase> msg)
+void Logger::DispatchDelegate(std::shared_ptr<DelegateLib::DelegateMsg> msg)
 {
 	ASSERT_TRUE(m_thread);
 
@@ -261,7 +261,7 @@ void Logger::Process()
 				auto delegateMsgBase = delegateMsg->GetMsg();
 
 				// Invoke the delegate target function on the target thread context
-				delegateMsgBase->GetDelegateInvoker()->DelegateInvoke(delegateMsgBase);
+				delegateMsgBase->GetDelegateInvoker()->Invoke(delegateMsgBase);
 				break;
 			}
 #endif

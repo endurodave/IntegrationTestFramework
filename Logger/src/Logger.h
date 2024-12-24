@@ -37,7 +37,7 @@ public:
 	}
 
 #ifdef IT_ENABLE
-	virtual void DispatchDelegate(std::shared_ptr<DelegateLib::DelegateMsgBase> msg);
+	virtual void DispatchDelegate(std::shared_ptr<DelegateLib::DelegateMsg> msg);
 #endif
 
 private:
