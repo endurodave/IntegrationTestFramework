@@ -24,10 +24,23 @@
 #ifdef IT_ENABLE
 #include "IntegrationTest.h"
 extern void Logger_IT_ForceLink();
-using namespace DelegateLib;
+using namespace dmq;
 #endif
 
 using namespace std;
+
+#ifdef IT_ENABLE
+std::atomic<bool> processTimerExit = false;
+static void ProcessTimers()
+{
+	while (!processTimerExit.load())
+	{
+		// Process all delegate-based timers
+		Timer::ProcessTimers();
+		std::this_thread::sleep_for(std::chrono::microseconds(50));
+	}
+}
+#endif
 
 //------------------------------------------------------------------------------
 // main
@@ -35,6 +48,9 @@ using namespace std;
 int main(void)
 {
 #ifdef IT_ENABLE
+	// Start the thread that will run ProcessTimers
+	std::thread timerThread(ProcessTimers);
+
 	// Dummy function call to prevent linker from discarding Logger_IT code
 	Logger_IT_ForceLink();
 
@@ -48,6 +64,11 @@ int main(void)
 	// Wait for integration tests to complete
 	while (!IntegrationTest::GetInstance().IsComplete())
 		this_thread::sleep_for(std::chrono::seconds(1));
+
+	// Ensure the timer thread completes before main exits
+	processTimerExit.store(true);
+	if (timerThread.joinable())
+		timerThread.join();
 #endif
 
 	return 0;

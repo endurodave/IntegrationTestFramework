@@ -12,6 +12,19 @@ cmake_minimum_required(VERSION 3.10)
 # Project name and language (C or C++)
 project(IntegrationTestFramework VERSION 1.0 LANGUAGES CXX)
 
+# Set build options
+set (DMQ_EXTERNAL_LIB "OFF")
+set (DMQ_ALLOCATOR "OFF")
+set (DMQ_UTIL "ON")
+set (DMQ_THREAD "DMQ_THREAD_STDLIB")
+set (DMQ_SERIALIZE "DMQ_SERIALIZE_NONE")
+set (DMQ_TRANSPORT "DMQ_TRANSPORT_NONE")
+include("${CMAKE_SOURCE_DIR}/DelegateMQ/DelegateMQ.cmake")
+
+# Enable integration test build
+set (ENABLE_IT "ON")
+add_compile_definitions(IT_ENABLE)
+
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
@@ -23,13 +36,13 @@ set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:DebugDLL>")
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
 # Collect all .cpp and *.h source files in the current directory
-file(GLOB SOURCES "${CMAKE_SOURCE_DIR}/*.cpp" "${CMAKE_SOURCE_DIR}/*.h")
+file(GLOB SOURCES "*.cpp" "*.h")
 
-# Collect all header files in the Delegate directory
-file(GLOB Delegate_HEADERS "${CMAKE_SOURCE_DIR}/Delegate/*.h")
+# Collect DelegateMQ predef source files
+list(APPEND SOURCES ${DMQ_PREDEF_SOURCES})
 
-# Organize Delegate headers into a "Delegate Files" folder in Visual Studio
-source_group("Delegate Files" FILES ${Delegate_HEADERS})
+# Organize delegate source files within IDE (Visual Studio)
+source_group("Delegate Files" FILES ${DMQ_LIB_SOURCES})
 
 # Platform-specific linker flags
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
@@ -51,15 +64,15 @@ include_directories(
 # Add subdirectories to include path if building integration tests
 if (ENABLE_IT)
     include_directories(
+        ${DMQ_ROOT_DIR}
         ${CMAKE_SOURCE_DIR}/Logger/it
-        ${CMAKE_SOURCE_DIR}/Delegate
         ${CMAKE_SOURCE_DIR}/IntegrationTest
         ${CMAKE_SOURCE_DIR}/GoogleTest/googletest/include
     )
 endif()
 
 # Add an executable target
-add_executable(IntegrationTestFrameworkApp ${SOURCES} ${Delegate_HEADERS})
+add_executable(IntegrationTestFrameworkApp ${SOURCES} ${DMQ_LIB_SOURCES})
 
 # Add subdirectories to build (product related code)
 add_subdirectory(Logger/src)

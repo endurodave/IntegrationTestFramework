@@ -12,7 +12,7 @@ class LogData
 {
 public:
 #ifdef IT_ENABLE
-	DelegateLib::MulticastDelegateSafe<void(std::chrono::milliseconds)> FlushTimeDelegate;
+	dmq::MulticastDelegateSafe<void(std::chrono::milliseconds)> FlushTimeDelegate;
 #endif
 
 	/// Write log data

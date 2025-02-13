@@ -15,7 +15,7 @@ class Msg;
 /// thread of control. 
 class Logger 
 #ifdef IT_ENABLE
-	: public DelegateLib::DelegateThread
+	: public dmq::IThread
 #endif
 {
 public:
@@ -37,7 +37,7 @@ public:
 	}
 
 #ifdef IT_ENABLE
-	virtual void DispatchDelegate(std::shared_ptr<DelegateLib::DelegateMsg> msg);
+	virtual void DispatchDelegate(std::shared_ptr<dmq::DelegateMsg> msg);
 #endif
 
 private:

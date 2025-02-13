@@ -46,10 +46,7 @@ This project implements an integration testing framework for multi-threaded C++ 
 
 ## References
 * [Goolge Test](https://github.com/google/googletest) - Google Test is a C++ unit testing framework that provides an API for writing and running unit tests.
-
-* [Asynchronous Multicast Delegates](https://github.com/endurodave/cpp-async-delegate) - A C++ standards compliant delegate library capable of targeting any callable function synchronously or asynchronously.
-
-* [C++ std::thread Event Loop](https://github.com/endurodave/StdWorkerThread) - A worker thread using the C++ thread support library.
+* [DelegateMQ](https://github.com/endurodave/DelegateMQ) - The DelegateMQ C++ library can invoke any callable function synchronously, asynchronously, or on a remote endpoint.
 
 # Logger Subsystem
 A simple string logging subsystem is used to illustrated the integration test concepts. The `Logger` class is the subsystem public interface. `Logger` executes in its own thread of control. The `Write()` API is thread-safe. 
@@ -66,7 +63,7 @@ The `Logger` was designed without reliance on the features of the Delegate libra
 ```cpp
 class Logger 
 #ifdef IT_ENABLE
-	: public DelegateLib::DelegateThread
+	: public dmq::DelegateThread
 #endif
 {
 public:
@@ -221,7 +218,7 @@ class LogData
 {
 public:
 #ifdef IT_ENABLE
-	DelegateLib::MulticastDelegateSafe<void(std::chrono::milliseconds)> FlushTimeDelegate;
+	dmq::MulticastDelegateSafe<void(std::chrono::milliseconds)> FlushTimeDelegate;
 #endif
 
 // etc...
@@ -446,7 +443,7 @@ The system has two threads:
 `Logger::DispatchDelegate()` pushes the delegate message into `Logger.m_queue`. The delegate library calls this function to invoke a function asynchronously.
 
 ```cpp
-void Logger::DispatchDelegate(std::shared_ptr<DelegateLib::DelegateMsgBase> msg)
+void Logger::DispatchDelegate(std::shared_ptr<dmq::DelegateMsgBase> msg)
 {
 	ASSERT_TRUE(m_thread);
 
@@ -573,7 +570,7 @@ public:
 The `IntegrationTest` thread has-a `WorkerThread` instance which, unlike `Logger`, is designed specifically for delegate-based usage.
 
 ```cpp
-class WorkerThread : public DelegateLib::DelegateThread
+class WorkerThread : public dmq::DelegateThread
 {
 public:
 	/// Constructor

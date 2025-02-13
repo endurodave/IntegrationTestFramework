@@ -6,7 +6,7 @@
 #ifdef IT_ENABLE
 
 // Allow production code to use delegate library
-#include "DelegateLib.h"
+#include "DelegateMQ.h"
 
 // Allow integration tests to access production code private members
 #define IT_PRIVATE_ACCESS public

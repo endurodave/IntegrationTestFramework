@@ -4,8 +4,7 @@
 #ifndef _INTEGRATION_TEST_H
 #define _INTEGRATION_TEST_H
 
-#include "WorkerThreadStd.h"
-#include "Timer.h"
+#include "DelegateMQ.h"
 #include <atomic>
 
 // The IntegrationTest class executes all integration tests created using the 
@@ -27,7 +26,7 @@ private:
 	void Run();
 
 	// The integration test worker thread that executes Google Test
-	WorkerThread m_thread;
+	Thread m_thread;
 
 	// Timer to start integration tests
 	Timer m_timer;

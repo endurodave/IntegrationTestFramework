@@ -9,13 +9,13 @@
 // tests and collect results.
 
 #include "Logger.h"
-#include "DelegateLib.h"
+#include "DelegateMQ.h"
 #include "SignalThread.h"
 #include "IT_Util.h"		// Include this last
 
 using namespace std;
 using namespace std::chrono;
-using namespace DelegateLib;
+using namespace dmq;
 
 // Local integration test variables
 static SignalThread signalThread;
