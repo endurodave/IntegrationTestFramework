@@ -4,7 +4,7 @@
 [![conan Windows](https://github.com/endurodave/IntegrationTestFramework/actions/workflows/cmake_windows.yml/badge.svg)](https://github.com/endurodave/IntegrationTestFramework/actions/workflows/cmake_windows.yml)
 
 # Integration Test Framework using Google Test and Delegates
-An integration test framework used for testing multi-threaded C++ based projects using Google Test and Asynchronous Multicast Delegate libraries. All target devices are supported including Windows, Linux, and embedded systems.
+An integration test framework used for testing multi-threaded C++ based projects using Google Test and [DelegateMQ](https://github.com/endurodave/DelegateMQ) C++ asynchronous delegate libraries. All target devices are supported including Windows, Linux, and embedded systems.
 
 # Table of Contents
 
@@ -15,8 +15,6 @@ An integration test framework used for testing multi-threaded C++ based projects
 - [Logger Subsystem](#logger-subsystem)
 - [Source Code](#source-code)
 - [CMake Build](#cmake-build)
-  - [Windows Visual Studio](#windows-visual-studio)
-  - [Linux Make](#linux-make)
 - [Testing Strategy](#testing-strategy)
 - [Delegates](#delegates)
 - [Integration Tests](#integration-tests)
@@ -86,18 +84,6 @@ The project contains the following directories:
 # CMake Build
 [CMake](https://cmake.org/) is used to create the project build files. See `CMakeLists.txt` for more information.
 
-## Windows Visual Studio
-
-`cmake -G "Visual Studio 17 2022" -A Win32 -B ../IntegrationTestFrameworkBuild -S . -DENABLE_IT=ON`
-
-![Windows Build](Figure2.jpg)
-
-## Linux Make 
-
-`cmake -G "Unix Makefiles" -B ../IntegrationTestFrameworkBuild -S . -DENABLE_IT=ON`
-
-![Linux Build](Figure3.jpg)
-
 # Testing Strategy  
 Software systems are complex, with numerous library and file dependencies, making integration testing challenging. It can be difficult to isolate and test a subsystem that consists of dozens or even hundreds of source files. This complexity is further compounded when the source code is intended to run only on an embedded target. While unit tests can isolate individual modules, integration testing increases complexity exponentially.
 
@@ -108,12 +94,12 @@ While unit tests are typically executed off-target, the integration test framewo
 As more integration tests are created, the product's executable image size increases. To manage this, the tests are distributed across multiple images, each with a specific purpose. For example, one image might test a logging subsystem, while another tests the alarm subsystem. Distributing the integration tests across multiple builds helps keep the image size manageable on memory constrained devices.
 
 # Delegates
-The Delegate library offers both synchronous and asynchronous function invocation, typically utilized in two design patterns:
+The DelegateMQ library offers both synchronous and asynchronous function invocation, typically utilized in two design patterns:
 
 * **Publish/Subscribe** - publisher exposes a delegate container to allow subscriber callbacks via anonymous runtime registration.
 * **Asynchronous Call** - asynchronously invoke any function on a specified thread using either a blocking or non-blocking call.
 
-See [Asynchronous Multicast Delegates (C++17)](https://github.com/endurodave/AsyncMulticastDelegateModern) for more information.
+See [DelegateMQ](https://github.com/endurodave/DelegateMQ) for more information.
 
 # Integration Tests
 The integration tests are contained within `Logger_IT.cc`. All tests follow a similar pattern:
