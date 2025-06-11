@@ -1,7 +1,7 @@
 # Example CMake command line to create project build files:
 #
 # *** Windows ***
-# cmake -G "Visual Studio 17 2022" -A Win32 -B Build -S . -DENABLE_IT=ON
+# cmake -G "Visual Studio 17 2022" -B Build -S . -DENABLE_IT=ON
 #
 # *** Linux ***
 # cmake -G "Unix Makefiles" -B Build -S . -DENABLE_IT=ON
@@ -12,12 +12,14 @@ cmake_minimum_required(VERSION 3.10)
 # Project name and language (C or C++)
 project(IntegrationTestFramework VERSION 1.0 LANGUAGES CXX)
 
-# Set build options
-set (DMQ_ALLOCATOR "OFF")
-set (DMQ_UTIL "ON")
-set (DMQ_THREAD "DMQ_THREAD_STDLIB")
-set (DMQ_SERIALIZE "DMQ_SERIALIZE_NONE")
-set (DMQ_TRANSPORT "DMQ_TRANSPORT_NONE")
+# Set build options (see Predef.cmake)
+set(DMQ_ASSERTS "OFF")                        # ON for assert faults
+set(DMQ_ALLOCATOR "OFF")                      # ON for fixed-block allocator
+set(DMQ_LOG "OFF")                            # ON for spglog output
+set(DMQ_UTIL "ON")                            # ON for delegate utility classes
+set(DMQ_THREAD "DMQ_THREAD_STDLIB")           # Set thread support library or none
+set(DMQ_SERIALIZE "DMQ_SERIALIZE_NONE")       # Set serialization support library or none
+set(DMQ_TRANSPORT "DMQ_TRANSPORT_NONE")       # Set transport support library or none
 include("${CMAKE_SOURCE_DIR}/DelegateMQ/DelegateMQ.cmake")
 
 # Enable integration test build

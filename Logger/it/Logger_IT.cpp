@@ -92,7 +92,7 @@ TEST(Logger_IT, Flush)
 	auto flushAsyncBlockingDelegate = MakeDelegate(
 		&Logger::GetInstance().m_logData,	// LogData object within Logger class
 		&LogData::Flush,					// LogData function to invoke
-		Logger::GetInstance(),				// Thread to invoke Flush (Logger is-a DelegateThread)
+		Logger::GetInstance(),				// Thread to invoke Flush (Logger is-a Thread)
 		milliseconds(100));					// Wait up to 100mS for Flush function to be called
 
 	// Invoke LogData::Flush on the Logger thread and obtain the return value

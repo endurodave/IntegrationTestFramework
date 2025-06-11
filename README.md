@@ -12,9 +12,9 @@ An integration test framework used for testing multi-threaded C++ based projects
 - [Table of Contents](#table-of-contents)
 - [Overview](#overview)
   - [References](#references)
+- [Getting Started](#getting-started)
 - [Logger Subsystem](#logger-subsystem)
 - [Source Code](#source-code)
-- [CMake Build](#cmake-build)
 - [Testing Strategy](#testing-strategy)
 - [Delegates](#delegates)
 - [Integration Tests](#integration-tests)
@@ -46,6 +46,14 @@ This project implements an integration testing framework for multi-threaded C++ 
 * [Goolge Test](https://github.com/google/googletest) - Google Test is a C++ unit testing framework that provides an API for writing and running unit tests.
 * [DelegateMQ](https://github.com/endurodave/DelegateMQ) - The DelegateMQ C++ library can invoke any callable function synchronously, asynchronously, or on a remote endpoint.
 
+# Getting Started
+[CMake](https://cmake.org/) is used to create the project build files. See `CMakeLists.txt` for more information.
+
+1. Clone the repository.
+2. From the repository root, run the following CMake command:   
+   `cmake -B Build . -DENABLE_IT=ON`
+3. Build and run the project within the `Build` directory. 
+
 # Logger Subsystem
 A simple string logging subsystem is used to illustrated the integration test concepts. The `Logger` class is the subsystem public interface. `Logger` executes in its own thread of control. The `Write()` API is thread-safe. 
 
@@ -61,7 +69,7 @@ The `Logger` was designed without reliance on the features of the DelegateMQ lib
 ```cpp
 class Logger 
 #ifdef IT_ENABLE
-    : public dmq::DelegateThread
+    : public dmq::IThread
 #endif
 {
 public:
@@ -80,9 +88,6 @@ The project contains the following directories:
 * **Logger/it** - the Logger subsystem integration test source code
 * **Logger/src** - the Logger subsystem production source code
 * **Port** - supporting utilities source code files
-
-# CMake Build
-[CMake](https://cmake.org/) is used to create the project build files. See `CMakeLists.txt` for more information.
 
 # Testing Strategy  
 Software systems are complex, with numerous library and file dependencies, making integration testing challenging. It can be difficult to isolate and test a subsystem that consists of dozens or even hundreds of source files. This complexity is further compounded when the source code is intended to run only on an embedded target. While unit tests can isolate individual modules, integration testing increases complexity exponentially.
@@ -181,7 +186,7 @@ TEST(Logger_IT, Flush)
     auto flushAsyncBlockingDelegate = MakeDelegate(
         &Logger::GetInstance().m_logData,   // LogData object within Logger class
         &LogData::Flush,                    // LogData function to invoke
-        Logger::GetInstance(),              // Thread to invoke Flush (Logger is-a DelegateThread)
+        Logger::GetInstance(),              // Thread to invoke Flush (Logger is-a Thread)
         milliseconds(100));                 // Wait up to 100mS for Flush function to be called
 
     // Invoke LogData::Flush on the Logger thread and obtain the return value
@@ -512,7 +517,7 @@ void Logger::Process()
                 auto delegateMsgBase = delegateMsg->GetMsg();
 
                 // Invoke the delegate target function on the target thread context
-                delegateMsgBase->GetDelegateInvoker()->DelegateInvoke(delegateMsgBase);
+                delegateMsgBase->GetInvoker()->Invoke(delegateMsgBase);
                 break;
             }
 #endif
@@ -530,37 +535,39 @@ void Logger::Process()
     }
 ```
 
-The production code can utilize any thread implementation. The only requirement is the thread  implements `DispatchDelegate()` and calls `DelegateInvoke()` on the destination thread.
+The production code can utilize any thread implementation. The only requirement is the thread  implements `DispatchDelegate()` and calls `Invoke()` on the destination thread.
 
 ```cpp
-/// @brief Each platform specific implementation must inherit from DelegateThread
-/// and provide an implementation for DispatchDelegate().
-class DelegateThread
+/// @details Each platform specific implementation must inherit from `IThread`
+/// and provide an implementation for `DispatchDelegate()`. The `DispatchDelegate()`
+/// function is called by the source thread to initiate an asynchronous function call
+/// onto the destination thread of control.
+class IThread
 {
 public:
-    /// Destructor
-    virtual ~DelegateThread() = default;
+	/// Destructor
+	virtual ~IThread() = default;
 
-    /// Dispatch a DelegateMsg onto this thread. The implementer is responsible
-    /// for getting the DelegateMsgBase into an OS message queue. Once DelegateMsgBase
-    /// is on the correct thread of control, the DelegateInvoker::DelegateInvoke() function
-    /// must be called to execute the callback. 
-    /// @param[in] msg - a pointer to the callback message that must be created dynamically.
-    /// @pre Caller *must* create the DelegateMsgBase argument dynamically.
-    /// @post The destination thread calls DelegateInvoke().
-    virtual void DispatchDelegate(std::shared_ptr<DelegateMsgBase> msg) = 0;
+	/// Dispatch a `DelegateMsg` onto this thread. The implementer is responsible for
+	/// getting the `DelegateMsg` into an OS message queue. Once `DelegateMsg` is
+	/// on the destination thread of control, the `IInvoker::Invoke()` function
+	/// must be called to execute the target function.
+	/// @param[in] msg A shared pointer to the message.
+	/// @post The destination thread calls `IThreadInvoker::Invoke()` when `DelegateMsg`
+	/// is received.
+	virtual void DispatchDelegate(std::shared_ptr<DelegateMsg> msg) = 0;
 };
 ```
 
 ## IntegrationTest Thread
-The `IntegrationTest` thread has-a `WorkerThread` instance which, unlike `Logger`, is designed specifically for delegate-based usage.
+The `IntegrationTest` thread has-a `Thread` instance which, unlike `Logger`, is designed specifically for delegate-based usage.
 
 ```cpp
-class WorkerThread : public dmq::DelegateThread
+class Thread : public dmq::IThread
 {
 public:
     /// Constructor
-    WorkerThread(const char* threadName);
+    Thread(const std::string& threadName);
 
     /// etc...
 ```
