@@ -13,8 +13,8 @@ An integration test framework used for testing multi-threaded C++ based projects
 - [Overview](#overview)
   - [References](#references)
 - [Getting Started](#getting-started)
-- [Logger Subsystem](#logger-subsystem)
 - [Source Code](#source-code)
+- [Logger Subsystem](#logger-subsystem)
 - [Testing Strategy](#testing-strategy)
 - [Delegates](#delegates)
 - [Integration Tests](#integration-tests)
@@ -54,6 +54,16 @@ This project implements an integration testing framework for multi-threaded C++ 
    `cmake -B Build . -DENABLE_IT=ON`
 3. Build and run the project within the `Build` directory. 
 
+# Source Code
+The project contains the following directories:
+
+* **DelegateMQ** - the DelegateMQ library source code directory
+* **GoogleTest** - the Google Test library source code directory
+* **IntegrationTest** - the integration test framework source code
+* **Logger/it** - the Logger subsystem integration test source code
+* **Logger/src** - the Logger subsystem production source code
+* **Port** - supporting utilities source code files
+
 # Logger Subsystem
 A simple string logging subsystem is used to illustrated the integration test concepts. The `Logger` class is the subsystem public interface. `Logger` executes in its own thread of control. The `Write()` API is thread-safe. 
 
@@ -79,15 +89,7 @@ public:
 
 The goal of the project is to provide an integration test framework with a simple example of testing the `Logger` subsystem in a multi-threaded environment.
 
-# Source Code
-The project contains the following directories:
 
-* **DelegateMQ** - the DelegateMQ library source code directory
-* **GoogleTest** - the Google Test library source code directory
-* **IntegrationTest** - the integration test framework source code
-* **Logger/it** - the Logger subsystem integration test source code
-* **Logger/src** - the Logger subsystem production source code
-* **Port** - supporting utilities source code files
 
 # Testing Strategy  
 Software systems are complex, with numerous library and file dependencies, making integration testing challenging. It can be difficult to isolate and test a subsystem that consists of dozens or even hundreds of source files. This complexity is further compounded when the source code is intended to run only on an embedded target. While unit tests can isolate individual modules, integration testing increases complexity exponentially.
