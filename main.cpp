@@ -6,8 +6,8 @@
 // Google Test: 
 // https://github.com/google/googletest
 // 
-// Asynchronous Multicast Delgates: 
-// https://github.com/endurodave/AsyncMulticastDelegateModern
+// Asynchronous Multicast Delegates: 
+// https://github.com/endurodave/DelegateMQ
 //
 // See CMakeLists.txt for build instructions.
 // 
