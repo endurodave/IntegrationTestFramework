@@ -32,6 +32,7 @@ See [IntegrationTestFrameworkCppUTest](https://github.com/endurodave/Integration
   - [IntegrationTest Thread](#integrationtest-thread)
 - [Integration Test Runtime](#integration-test-runtime)
 - [Conclusion](#conclusion)
+- [Portable C/C++ Libraries](#portable-cc-libraries)
 
 
 # Overview
@@ -626,3 +627,7 @@ Include `IT_Client.h` in any production module that requires integration test su
 
 # Conclusion
 Developing a user-friendly integration testing framework that mirrors the simplicity of unit testing can be challenging. This document outlines a solution that leverages Google Test and DelegateMQ libraries to achieve this goal.
+
+# Portable C/C++ Libraries
+
+Explore [portable-c-cpp-libs](https://github.com/endurodave/portable-c-cpp-libs) for reusable C/C++ components, including state machines, callbacks, threading, memory management, communication, fault handling, testing, and more.
