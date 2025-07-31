@@ -4,7 +4,10 @@
 [![conan Windows](https://github.com/endurodave/IntegrationTestFramework/actions/workflows/cmake_windows.yml/badge.svg)](https://github.com/endurodave/IntegrationTestFramework/actions/workflows/cmake_windows.yml)
 
 # Integration Test Framework using Google Test and Delegates
+
 An integration test framework used for testing multi-threaded C++ based projects using Google Test and [DelegateMQ](https://github.com/endurodave/DelegateMQ) C++ asynchronous delegate libraries. All target devices are supported including Windows, Linux, and embedded systems.
+
+See [IntegrationTestFrameworkCppUTest](https://github.com/endurodave/IntegrationTestFrameworkCppUTest) for alternate CppUTest and delegates implementation.
 
 # Table of Contents
 
@@ -45,6 +48,7 @@ This project implements an integration testing framework for multi-threaded C++ 
 ## References
 * [Goolge Test](https://github.com/google/googletest) - Google Test is a C++ unit testing framework that provides an API for writing and running unit tests.
 * [DelegateMQ](https://github.com/endurodave/DelegateMQ) - The DelegateMQ C++ library can invoke any callable function synchronously, asynchronously, or on a remote endpoint.
+* [IntegrationTestFrameworkCppUTest](https://github.com/endurodave/IntegrationTestFrameworkCppUTest) - Integration test framework using CppUTest and delegates.
 
 # Getting Started
 [CMake](https://cmake.org/) is used to create the project build files. See `CMakeLists.txt` for more information.
@@ -618,7 +622,7 @@ void IntegrationTest::Run()
 }
 ```
 
-Include `UI_Client.h` in any production module that requires integration test support.
+Include `IT_Client.h` in any production module that requires integration test support.
 
 # Conclusion
 Developing a user-friendly integration testing framework that mirrors the simplicity of unit testing can be challenging. This document outlines a solution that leverages Google Test and DelegateMQ libraries to achieve this goal.

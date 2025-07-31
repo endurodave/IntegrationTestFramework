@@ -32,6 +32,7 @@ bool LogData::Flush()
             logFile << str << std::endl;
         }
         logFile.close();
+        m_msgData.clear();
 
 #ifdef IT_ENABLE
         auto endTime = std::chrono::high_resolution_clock::now();

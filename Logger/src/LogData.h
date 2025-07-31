@@ -15,6 +15,9 @@ public:
 	dmq::MulticastDelegateSafe<void(std::chrono::milliseconds)> FlushTimeDelegate;
 #endif
 
+	LogData() { }
+	~LogData() { m_msgData.clear(); }
+
 	/// Write log data
 	/// @param[in] msg - data to log
 	void Write(const std::string& msg);	

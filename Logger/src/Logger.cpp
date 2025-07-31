@@ -197,6 +197,17 @@ void Logger::TimerThread()
 //----------------------------------------------------------------------------
 void Logger::Process()
 {
+#ifdef IT_ENABLE
+	{
+		// Tests might check for memory leaks. std::queue on first push allocates memory.
+		// If the first push is done during a test, it could trigger a memory leak failure.
+		// Put a dummy message in queue before tests starts to resolve.
+		auto m = std::make_shared<Msg>(0);
+		m_queue.push(m);
+		m_queue.pop();
+	}
+#endif
+
     m_timerExit = false;
     std::thread timerThread(&Logger::TimerThread, this);
 
