@@ -11,7 +11,7 @@ using namespace std;
 //----------------------------------------------------------------------------
 void LogData::Write(const std::string& msg)
 {
-	m_msgData.push_back(msg);
+    m_msgData.push_back(msg);
 }
 
 //----------------------------------------------------------------------------
@@ -25,9 +25,9 @@ bool LogData::Flush()
 
     // Write log data to disk
     std::ofstream logFile("LogData.txt", std::ios::app);
-    if (logFile.is_open()) 
+    if (logFile.is_open())
     {
-        for (const std::string& str : m_msgData) 
+        for (const std::string& str : m_msgData)
         {
             logFile << str << std::endl;
         }

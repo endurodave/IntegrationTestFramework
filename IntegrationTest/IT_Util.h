@@ -15,15 +15,15 @@
 
 // Helper function to simplify asynchronous function invoke within a test
 template <typename C, typename F, typename T, typename M = std::chrono::milliseconds, typename... Args>
-auto AsyncInvoke(C obj, F func, T& thread, M timeout, Args&&... args) 
+auto AsyncInvoke(C obj, F func, T& thread, M timeout, Args&&... args)
 {
-	// Asynchronously call target function and wait up to timeout milliseconds to complete
-	auto retVal = MakeDelegate(obj, func, thread, timeout).AsyncInvoke(std::forward<Args>(args)...);
+    // Asynchronously call target function and wait up to timeout milliseconds to complete
+    auto retVal = MakeDelegate(obj, func, thread, timeout).AsyncInvoke(std::forward<Args>(args)...);
 
-	// Check that the target function call succeeded within the timeout specified
-	EXPECT_TRUE(retVal.has_value());
+    // Check that the target function call succeeded within the timeout specified
+    EXPECT_TRUE(retVal.has_value());
 
-	return retVal;
+    return retVal;
 }
 
 #endif

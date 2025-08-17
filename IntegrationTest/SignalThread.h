@@ -14,26 +14,26 @@ class SignalThread
 {
 public:
     // Constructor initializes the signal to false
-    SignalThread() : m_signalSet(false) { }
+    SignalThread() : m_signalSet(false) {}
 
     // This function waits for the signal for a maximum of milliseconds. It
     // returns true if the signal was set within the timeout, false otherwise.
     // @param[in] ms - milliseconds to wait for signal
     // @return Returns true if signalled, false otherwise.
-    bool WaitForSignal(int ms) 
+    bool WaitForSignal(int ms)
     {
         std::unique_lock<std::mutex> lock(m_mutex);
 
         // Wait until the signal is set or the timeout expires
-        if (m_cv.wait_for(lock, std::chrono::milliseconds(ms), [this] { return m_signalSet; })) 
+        if (m_cv.wait_for(lock, std::chrono::milliseconds(ms), [this] { return m_signalSet; }))
         {
             // Reset the signal
-            m_signalSet = false; 
+            m_signalSet = false;
 
             // Signal was set within the timeout
             return true;
         }
-        else 
+        else
         {
             // Timeout expired
             return false;
@@ -41,7 +41,7 @@ public:
     }
 
     // This function sets the signal and notifies the waiting thread.
-    void SetSignal() 
+    void SetSignal()
     {
         std::lock_guard<std::mutex> lock(m_mutex);
         m_signalSet = true;

@@ -19,6 +19,7 @@ See [IntegrationTestFrameworkCppUTest](https://github.com/endurodave/Integration
 - [Source Code](#source-code)
 - [Logger Subsystem](#logger-subsystem)
 - [Testing Strategy](#testing-strategy)
+  - [Google Test Global State Warning](#google-test-global-state-warning)
 - [Delegates](#delegates)
 - [Integration Tests](#integration-tests)
   - [Write Test](#write-test)
@@ -94,8 +95,6 @@ public:
 
 The goal of the project is to provide an integration test framework with a simple example of testing the `Logger` subsystem in a multi-threaded environment.
 
-
-
 # Testing Strategy  
 Software systems are complex, with numerous library and file dependencies, making integration testing challenging. It can be difficult to isolate and test a subsystem that consists of dozens or even hundreds of source files. This complexity is further compounded when the source code is intended to run only on an embedded target. While unit tests can isolate individual modules, integration testing increases complexity exponentially.
 
@@ -104,6 +103,18 @@ In my experience with medical device design, integration testing was typically p
 While unit tests are typically executed off-target, the integration test framework presented here runs on-target, in parallel with normal device operation. The target device may be Windows, Linux or an embedded system. The tests can be executed in a special maintenance mode, when the system is idle, or alongside normal operations. Regardless of the mode, the tests run directly on the device, with results captured accordingly. In some cases, the test results are sent to an external logging machine via Ethernet or serial ports. In this project, the results are output to the screen.
 
 As more integration tests are created, the product's executable image size increases. To manage this, the tests are distributed across multiple images, each with a specific purpose. For example, one image might test a logging subsystem, while another tests the alarm subsystem. Distributing the integration tests across multiple builds helps keep the image size manageable on memory constrained devices.
+
+## Google Test Global State Warning
+
+Google Test was designed for a single-threaded environment. Its global state structures are not thread-safe, so Google Test APIs must only be invoked from the `IntegrationTest` thread. Production code and callbacks into integration test modules must not call any Google Test APIs.
+
+- `UnitTest` singleton (holds all registered tests, test cases, and current test info)
+- Current test result and `TestInfo` tracking
+- Environment objects (`::testing::Environment`)
+- Test listeners and output reporters
+- Command-line/test selection state
+
+To prevent cross-thread interference, all Google Test features should only be accessed from the IntegrationTest thread (e.g., code inside test macros such as `TEST`, `TEST_F`, `TEST_P`, and their associated setup/teardown). Worker threads in your production code may run freely, but must not call any Google Test assertions or APIs.
 
 # Delegates
 The DelegateMQ library offers both synchronous and asynchronous function invocation, typically utilized in two design patterns:

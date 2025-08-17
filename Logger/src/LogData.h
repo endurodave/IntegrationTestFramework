@@ -12,25 +12,25 @@ class LogData
 {
 public:
 #ifdef IT_ENABLE
-	dmq::MulticastDelegateSafe<void(std::chrono::milliseconds)> FlushTimeDelegate;
+    dmq::MulticastDelegateSafe<void(std::chrono::milliseconds)> FlushTimeDelegate;
 #endif
 
-	LogData() { }
-	~LogData() { m_msgData.clear(); }
+    LogData() {}
+    ~LogData() { m_msgData.clear(); }
 
-	/// Write log data
-	/// @param[in] msg - data to log
-	void Write(const std::string& msg);	
+    /// Write log data
+    /// @param[in] msg - data to log
+    void Write(const std::string& msg);
 
-	/// Flush log data to disk
-	/// @return True if success. 
-	bool Flush();
+    /// Flush log data to disk
+    /// @return True if success. 
+    bool Flush();
 
 private:
-IT_PRIVATE_ACCESS:
+    IT_PRIVATE_ACCESS :
 
-	/// List to hold log data messages
-	std::list<std::string> m_msgData;
+    /// List to hold log data messages
+    std::list<std::string> m_msgData;
 };
 
 #endif

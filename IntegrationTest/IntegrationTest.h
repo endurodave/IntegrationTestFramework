@@ -12,26 +12,26 @@
 class IntegrationTest
 {
 public:
-	/// Get singleton instance of this class
-	static IntegrationTest& GetInstance();
+    /// Get singleton instance of this class
+    static IntegrationTest& GetInstance();
 
-	// Return true if integration test is complete
-	std::atomic<bool>& IsComplete() { return m_complete; }
+    // Return true if integration test is complete
+    std::atomic<bool>& IsComplete() { return m_complete; }
 
 private:
-	IntegrationTest();
-	~IntegrationTest();
+    IntegrationTest();
+    ~IntegrationTest();
 
-	// Called to run all integration tests
-	void Run();
+    // Called to run all integration tests
+    void Run();
 
-	// The integration test worker thread that executes Google Test
-	Thread m_thread;
+    // The integration test worker thread that executes Google Test
+    Thread m_thread;
 
-	// Timer to start integration tests
-	Timer m_timer;
+    // Timer to start integration tests
+    Timer m_timer;
 
-	std::atomic<bool> m_complete = false;
+    std::atomic<bool> m_complete = false;
 };
 
 #endif

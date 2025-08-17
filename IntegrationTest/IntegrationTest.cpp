@@ -12,21 +12,21 @@
 //----------------------------------------------------------------------------
 IntegrationTest& IntegrationTest::GetInstance()
 {
-	static IntegrationTest instance;
-	return instance;
+    static IntegrationTest instance;
+    return instance;
 }
 
 //----------------------------------------------------------------------------
 // Constructor
 //----------------------------------------------------------------------------
 IntegrationTest::IntegrationTest() :
-	m_thread("IntegrationTestThread")
+    m_thread("IntegrationTestThread")
 {
-	m_thread.CreateThread();
+    m_thread.CreateThread();
 
-	// Start integration tests 500mS after system startup
-	m_timer.Expired = MakeDelegate(this, &IntegrationTest::Run, m_thread);
-	m_timer.Start(std::chrono::milliseconds(500));
+    // Start integration tests 500mS after system startup
+    m_timer.Expired = MakeDelegate(this, &IntegrationTest::Run, m_thread);
+    m_timer.Start(std::chrono::milliseconds(500));
 }
 
 //----------------------------------------------------------------------------
@@ -34,7 +34,7 @@ IntegrationTest::IntegrationTest() :
 //----------------------------------------------------------------------------
 IntegrationTest::~IntegrationTest()
 {
-	m_timer.Expired = 0;
+    m_timer.Expired = 0;
 }
 
 //----------------------------------------------------------------------------
@@ -42,16 +42,16 @@ IntegrationTest::~IntegrationTest()
 //----------------------------------------------------------------------------
 void IntegrationTest::Run()
 {
-	m_timer.Stop();
+    m_timer.Stop();
 
-	// Initialize Google Test
-	::testing::InitGoogleTest();
+    // Initialize Google Test
+    ::testing::InitGoogleTest();
 
-	// Run all tests and return the result
-	int retVal = RUN_ALL_TESTS();
+    // Run all tests and return the result
+    int retVal = RUN_ALL_TESTS();
 
-	std::cout << "RUN_ALL_TESTS() return value: " << retVal << std::endl;
+    std::cout << "RUN_ALL_TESTS() return value: " << retVal << std::endl;
 
-	m_complete = true;
+    m_complete = true;
 }
 
