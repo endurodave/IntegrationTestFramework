@@ -5,9 +5,12 @@
 
 # Integration Test Framework using Google Test and Delegates
 
-An integration test framework used for testing multi-threaded C++ based projects using Google Test and [DelegateMQ](https://github.com/endurodave/DelegateMQ) C++ asynchronous delegate libraries. All target devices are supported including Windows, Linux, and embedded systems.
+An integration test framework used for testing multi-threaded C++ based projects using [Google Test](https://github.com/google/googletest) and [DelegateMQ](https://github.com/endurodave/DelegateMQ) C++ asynchronous delegate libraries. All target devices are supported including Windows, Linux, and embedded systems.
 
-See [IntegrationTestFrameworkCppUTest](https://github.com/endurodave/IntegrationTestFrameworkCppUTest) for alternate CppUTest and delegates implementation.
+See alternative implementations using different test frameworks:
+
+* [IntegrationTestFrameworkDoctest](https://github.com/endurodave/IntegrationTestFrameworkDoctest) - doctest implementation.
+* [IntegrationTestFrameworkCppUTest](https://github.com/endurodave/IntegrationTestFrameworkCppUTest) - CppUTest implementation.
 
 # Table of Contents
 
@@ -48,9 +51,10 @@ Unit testing is well understood, with numerous frameworks (including Google Test
 This project implements an integration testing framework for multi-threaded C++ applications, compatible with any system supporting C++, including Windows and Linux. It has no external OS dependencies or libraries beyond the standard C++ library. Multi-threading is achieved using the C++ thread support library, eliminating the need for OS-specific dependencies. Alternatively, write a small amount of code to port the framework to any PC or embedded operating system.
 
 ## References
-* [Goolge Test](https://github.com/google/googletest) - Google Test is a C++ unit testing framework that provides an API for writing and running unit tests.
+* [Google Test](https://github.com/google/googletest) - Google Test is a C++ unit testing framework that provides an API for writing and running unit tests.
 * [DelegateMQ](https://github.com/endurodave/DelegateMQ) - The DelegateMQ C++ library can invoke any callable function synchronously, asynchronously, or on a remote endpoint.
 * [IntegrationTestFrameworkCppUTest](https://github.com/endurodave/IntegrationTestFrameworkCppUTest) - Integration test framework using CppUTest and delegates.
+* [IntegrationTestFrameworkDoctest](https://github.com/endurodave/IntegrationTestFrameworkDoctest) - Integration test framework using Doctest and delegates.
 
 # Getting Started
 [CMake](https://cmake.org/) is used to create the project build files. See `CMakeLists.txt` for more information.

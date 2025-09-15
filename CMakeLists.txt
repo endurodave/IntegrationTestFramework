@@ -1,10 +1,6 @@
 # Example CMake command line to create project build files:
 #
-# *** Windows ***
-# cmake -G "Visual Studio 17 2022" -B Build -S . -DENABLE_IT=ON
-#
-# *** Linux ***
-# cmake -G "Unix Makefiles" -B Build -S . -DENABLE_IT=ON
+# cmake -B Build . -DENABLE_IT=ON
 
 # Specify the minimum CMake version required
 cmake_minimum_required(VERSION 3.10)
