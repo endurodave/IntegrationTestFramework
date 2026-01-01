@@ -26,7 +26,7 @@ IntegrationTest::IntegrationTest() :
 
     // Start integration tests 500mS after system startup. Alteratively, 
     // create your own worker thread and call Run() directly.
-    m_timer.Expired = MakeDelegate(this, &IntegrationTest::Run, m_thread);
+    (*m_timer.Expired) += MakeDelegate(this, &IntegrationTest::Run, m_thread);
     m_timer.Start(std::chrono::milliseconds(500));
 }
 
@@ -35,7 +35,7 @@ IntegrationTest::IntegrationTest() :
 //----------------------------------------------------------------------------
 IntegrationTest::~IntegrationTest()
 {
-    m_timer.Expired = 0;
+    (*m_timer.Expired) -= MakeDelegate(this, &IntegrationTest::Run, m_thread);
 }
 
 //----------------------------------------------------------------------------
