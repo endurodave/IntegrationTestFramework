@@ -14,8 +14,8 @@ set(DMQ_ALLOCATOR "OFF")                      # ON for fixed-block allocator
 set(DMQ_LOG "OFF")                            # ON for spglog output
 set(DMQ_UTIL "ON")                            # ON for delegate utility classes
 set(DMQ_THREAD "DMQ_THREAD_STDLIB")           # Set thread support library or none
-set(DMQ_SERIALIZE "DMQ_SERIALIZE_NONE")       # Set serialization support library or none
-set(DMQ_TRANSPORT "DMQ_TRANSPORT_NONE")       # Set transport support library or none
+set(DMQ_SERIALIZE "DMQ_SERIALIZE_SERIALIZE")  # Set serialization support library or none
+set(DMQ_TRANSPORT "DMQ_TRANSPORT_WIN32_UDP")  # Set transport support library or none           TODO: Linux or Windows
 include("${CMAKE_SOURCE_DIR}/DelegateMQ/DelegateMQ.cmake")
 
 # Enable integration test build
