@@ -31,6 +31,9 @@ private:
     // Timer to start integration tests
     Timer m_timer;
 
+    // RAII connection handle for m_timer.OnExpired; auto-disconnects on destruction
+    dmq::ScopedConnection m_timerConnection;
+
     std::atomic<bool> m_complete = false;
 };
 
