@@ -30,6 +30,9 @@ See alternative implementations using different test frameworks:
   - [FlushTime Test](#flushtime-test)
   - [FlushTestSimplified Test](#flushtestsimplified-test)
   - [FlushTestSimplifiedWithLambda Test](#flushtestsimplifiedwithlambda-test)
+  - [WriteSequence Test](#writesequence-test)
+  - [FlushFaultInjection Test](#flushfaultinjection-test)
+  - [ConcurrentWrites Test](#concurrentwrites-test)
   - [Integration Test Results](#integration-test-results)
 - [Threads](#threads)
   - [Logger Thread](#logger-thread)
@@ -441,8 +444,182 @@ TEST(Logger_IT, FlushTimeSimplifiedWithLambda)
     // etc...
 ```
 
+## WriteSequence Test
+The `WriteSequence` test verifies that callbacks from multiple `Write` operations arrive in the correct order. All three writes are queued without waiting between them, stressing the Logger's message queue. `WriteSeqCb` ignores timer-triggered flush callbacks so they cannot interfere with the sequence count or the signal. A single `WaitForSignal` call blocks until all three write callbacks have been delivered, at which point `callbackStatus` is inspected.
+
+```cpp
+// State for WriteSequence test
+static atomic<int> writeSeqCount{ 0 };
+static int writeSeqTarget = 0;
+static SignalThread writeSeqSignal;
+
+// Logger callback for WriteSequence test. Records Write success! callbacks into
+// callbackStatus and signals once writeSeqTarget writes have been confirmed.
+// Flush callbacks from the Logger timer are ignored to avoid signal interference.
+void WriteSeqCb(const string& status)
+{
+    if (status != "Write success!")
+        return;
+
+    {
+        lock_guard<mutex> lock(mtx);
+        callbackStatus.push_back(status);
+    }
+
+    if (++writeSeqCount == writeSeqTarget)
+        writeSeqSignal.SetSignal();
+}
+
+// Verify that callbacks from multiple Write operations arrive in the correct sequence.
+// Fires 3 writes without waiting between them, then confirms the Logger thread
+// delivered all 3 callbacks in FIFO order — the same order the writes were issued.
+TEST(Logger_IT, WriteSequence)
+{
+    writeSeqCount = 0;
+    writeSeqTarget = 3;
+    {
+        lock_guard<mutex> lock(mtx);
+        callbackStatus.clear();
+    }
+
+    Logger::GetInstance().SetCallback(&WriteSeqCb);
+
+    // Queue all 3 writes without waiting between them
+    Logger::GetInstance().Write("First");
+    Logger::GetInstance().Write("Second");
+    Logger::GetInstance().Write("Third");
+
+    // Wait until all 3 write callbacks have arrived from the Logger thread
+    EXPECT_TRUE(writeSeqSignal.WaitForSignal(1000));
+
+    {
+        lock_guard<mutex> lock(mtx);
+
+        // Verify all 3 write callbacks arrived in sequence.
+        // The Logger's FIFO message queue guarantees the callbacks are
+        // delivered in the same order the Write calls were submitted.
+        ASSERT_EQ(callbackStatus.size(), 3u);
+        EXPECT_EQ(callbackStatus[0], "Write success!");
+        EXPECT_EQ(callbackStatus[1], "Write success!");
+        EXPECT_EQ(callbackStatus[2], "Write success!");
+    }
+
+    Logger::GetInstance().SetCallback(nullptr);
+}
+```
+
+The `WriteSeqCb` callback uses an `atomic<int>` counter rather than signaling on every callback. This avoids the binary-signal limitation of `SignalThread`: if all three callbacks arrive before the first `WaitForSignal` call, a plain binary signal would capture only one of them. The counter-based approach fires the signal exactly once, after the last expected callback, regardless of how quickly the Logger thread processes the queue.
+
+## FlushFaultInjection Test
+The `FlushFaultInjection` test drives `LogData::Flush()` into its error path — a code path that is unreachable under normal operation. The fault is injected by removing the write permission from `LogData.txt` using `std::filesystem::permissions`. After confirming the failure, permissions are restored and the test verifies that the buffered data was preserved: `LogData::Flush()` only clears `m_msgData` on success, so a failed flush leaves the data intact for a retry.
+
+```cpp
+// Verify that a Flush failure is correctly detected and that buffered log data
+// is preserved across the failure for a subsequent retry.
+TEST(Logger_IT, FlushFaultInjection)
+{
+    namespace fs = std::filesystem;
+
+    // Ensure LogData.txt exists on disk so permissions can be applied to it
+    auto ensureRet = AsyncInvoke(
+        &Logger::GetInstance().m_logData,
+        &LogData::Flush,
+        Logger::GetInstance(),
+        milliseconds(100));
+    ASSERT_TRUE(ensureRet.has_value());
+
+    // Write a data entry that will be held in the buffer during the fault
+    AsyncInvoke(
+        &Logger::GetInstance().m_logData,
+        &LogData::Write,
+        Logger::GetInstance(),
+        milliseconds(50),
+        string("Fault injection test data"));
+
+    // Inject fault: remove write permission from the log file
+    std::error_code ec;
+    fs::permissions("LogData.txt",
+        fs::perms::owner_write | fs::perms::group_write | fs::perms::others_write,
+        fs::perm_options::remove, ec);
+    ASSERT_FALSE(ec) << "Failed to remove write permission: " << ec.message();
+
+    // Flush must fail because the file is now read-only
+    auto failRet = AsyncInvoke(
+        &Logger::GetInstance().m_logData,
+        &LogData::Flush,
+        Logger::GetInstance(),
+        milliseconds(100));
+    EXPECT_TRUE(failRet.has_value());
+    if (failRet.has_value())
+        EXPECT_FALSE(failRet.value());  // Flush should return false on fault
+
+    // Restore write permission to recover from the fault
+    fs::permissions("LogData.txt", fs::perms::owner_write, fs::perm_options::add, ec);
+    ASSERT_FALSE(ec) << "Failed to restore write permission: " << ec.message();
+
+    // Buffered data must have survived the failed flush - retry must succeed.
+    // LogData::Flush does not clear m_msgData on failure, preserving the entry.
+    auto retryRet = AsyncInvoke(
+        &Logger::GetInstance().m_logData,
+        &LogData::Flush,
+        Logger::GetInstance(),
+        milliseconds(100));
+    EXPECT_TRUE(retryRet.has_value());
+    if (retryRet.has_value())
+        EXPECT_TRUE(retryRet.value()); // Flush should succeed after recovery
+}
+```
+
+The test invokes `LogData::Flush()` directly via `AsyncInvoke`, which marshals the call onto the Logger thread. `AsyncInvoke` returns `optional<bool>`: `has_value()` indicates the call completed within the timeout, and `value()` contains the actual return value of `Flush()`. Fault injection tests like this are only practical with the async delegate approach — they require precise control over the production thread's execution context while the test thread manipulates external state.
+
+## ConcurrentWrites Test
+The `ConcurrentWrites` test fires 20 `Write` calls in rapid succession without waiting between them and verifies that the Logger thread processes every one without dropping a callback. Each write is a thread-safe public API call that pushes a message into the Logger's queue; the test validates the queue handles burst load correctly.
+
+```cpp
+// State for ConcurrentWrites test
+static atomic<int> concurrentWriteCount{ 0 };
+static int concurrentWriteTarget = 0;
+static SignalThread concurrentDoneSignal;
+
+// Logger callback for ConcurrentWrites test. Counts Write success! callbacks
+// and signals once all concurrentWriteTarget writes have been confirmed.
+void ConcurrentWriteCb(const string& status)
+{
+    if (status == "Write success!")
+        if (++concurrentWriteCount == concurrentWriteTarget)
+            concurrentDoneSignal.SetSignal();
+}
+
+// Stress test that fires many Write calls without waiting between them and
+// verifies the Logger thread processes every one without dropping a callback.
+TEST(Logger_IT, ConcurrentWrites)
+{
+    const int NUM_WRITES = 20;
+    concurrentWriteCount = 0;
+    concurrentWriteTarget = NUM_WRITES;
+
+    Logger::GetInstance().SetCallback(&ConcurrentWriteCb);
+
+    // Fire all writes without waiting — stress the Logger's message queue
+    for (int i = 0; i < NUM_WRITES; i++)
+        Logger::GetInstance().Write("ConcurrentWrite " + to_string(i));
+
+    // Wait until all NUM_WRITES callbacks have been received
+    EXPECT_TRUE(concurrentDoneSignal.WaitForSignal(2000))
+        << "Timed out: only " << concurrentWriteCount.load()
+        << " of " << NUM_WRITES << " write callbacks received";
+
+    // Every write must have produced exactly one callback
+    EXPECT_EQ(concurrentWriteCount.load(), NUM_WRITES);
+
+    Logger::GetInstance().SetCallback(nullptr);
+}
+```
+
+`ConcurrentWriteCb` uses `atomic<int>` for `concurrentWriteCount` because the callback executes on the Logger thread while the test thread reads the count in the `EXPECT_EQ` assertion. The signal fires exactly once — when the counter reaches the target — so `WaitForSignal` is guaranteed to return as soon as the last callback arrives, with no missed signals and no spurious wake-ups. The descriptive failure message reports how many callbacks were received before the timeout, which is useful for diagnosing load-related issues.
+
 ## Integration Test Results
-The integration test results are output to the console. 
+The integration test results are output to the console.
 
 ![Integration Test Results](Figure1.jpg)
 
