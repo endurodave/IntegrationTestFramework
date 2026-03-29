@@ -40,6 +40,7 @@ list(APPEND SOURCES ${DMQ_PREDEF_SOURCES})
 
 # Organize delegate source files within IDE (Visual Studio)
 source_group("Delegate Files" FILES ${DMQ_LIB_SOURCES})
+source_group("Predef Files" FILES ${DMQ_PREDEF_SOURCES})
 
 # Platform-specific linker flags
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")

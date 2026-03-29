@@ -268,7 +268,7 @@ TEST(Logger_IT, FlushTimeSimplified)
 TEST(Logger_IT, FlushTimeSimplifiedWithLambda)
 {
 	// Logger callback handler lambda function invoked from Logger thread context
-	auto FlushTimeLambdaCb = +[](milliseconds duration) -> void
+	auto FlushTimeLambdaCb = [](milliseconds duration) -> void
 	{
 		// Protect flushTime against multiple thread access by IntegrationTest 
 		// thread and Logger thread

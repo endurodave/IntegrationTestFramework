@@ -1,16 +1,11 @@
 ![License MIT](https://img.shields.io/github/license/BehaviorTree/BehaviorTree.CPP?color=blue)
-[![conan Ubuntu](https://github.com/endurodave/IntegrationTestFramework/actions/workflows/cmake_ubuntu.yml/badge.svg)](https://github.com/endurodave/IntegrationTestFramework/actions/workflows/cmake_ubuntu.yml)
-[![conan Ubuntu](https://github.com/endurodave/IntegrationTestFramework/actions/workflows/cmake_clang.yml/badge.svg)](https://github.com/endurodave/IntegrationTestFramework/actions/workflows/cmake_clang.yml)
-[![conan Windows](https://github.com/endurodave/IntegrationTestFramework/actions/workflows/cmake_windows.yml/badge.svg)](https://github.com/endurodave/IntegrationTestFramework/actions/workflows/cmake_windows.yml)
+[![conan Ubuntu](https://github.com/DelegateMQ/IntegrationTestFramework/actions/workflows/cmake_ubuntu.yml/badge.svg)](https://github.com/DelegateMQ/IntegrationTestFramework/actions/workflows/cmake_ubuntu.yml)
+[![conan Ubuntu](https://github.com/DelegateMQ/IntegrationTestFramework/actions/workflows/cmake_clang.yml/badge.svg)](https://github.com/DelegateMQ/IntegrationTestFramework/actions/workflows/cmake_clang.yml)
+[![conan Windows](https://github.com/DelegateMQ/IntegrationTestFramework/actions/workflows/cmake_windows.yml/badge.svg)](https://github.com/DelegateMQ/IntegrationTestFramework/actions/workflows/cmake_windows.yml)
 
 # Integration Test Framework using Google Test and Delegates
 
-An integration test framework used for testing multi-threaded C++ based projects using [Google Test](https://github.com/google/googletest) and [DelegateMQ](https://github.com/endurodave/DelegateMQ) C++ asynchronous delegate libraries. All target devices are supported including Windows, Linux, and embedded systems.
-
-See alternative implementations using different test frameworks:
-
-* [IntegrationTestFrameworkDoctest](https://github.com/endurodave/IntegrationTestFrameworkDoctest) - doctest implementation.
-* [IntegrationTestFrameworkCppUTest](https://github.com/endurodave/IntegrationTestFrameworkCppUTest) - CppUTest implementation.
+An integration test framework used for testing multi-threaded C++ based projects using [Google Test](https://github.com/google/googletest) and [DelegateMQ](https://github.com/DelegateMQ/DelegateMQ) C++ asynchronous delegate libraries. All target devices are supported including Windows, Linux, and embedded systems.
 
 # Table of Contents
 
@@ -55,9 +50,9 @@ This project implements an integration testing framework for multi-threaded C++ 
 
 ## References
 * [Google Test](https://github.com/google/googletest) - Google Test is a C++ unit testing framework that provides an API for writing and running unit tests.
-* [DelegateMQ](https://github.com/endurodave/DelegateMQ) - The DelegateMQ C++ library can invoke any callable function synchronously, asynchronously, or on a remote endpoint.
-* [IntegrationTestFrameworkCppUTest](https://github.com/endurodave/IntegrationTestFrameworkCppUTest) - Integration test framework using CppUTest and delegates.
-* [IntegrationTestFrameworkDoctest](https://github.com/endurodave/IntegrationTestFrameworkDoctest) - Integration test framework using Doctest and delegates.
+* [DelegateMQ](https://github.com/DelegateMQ/DelegateMQ) - The DelegateMQ C++ library can invoke any callable function synchronously, asynchronously, or on a remote endpoint.
+* [IntegrationTestFrameworkCppUTest](https://github.com/DelegateMQ/IntegrationTestFrameworkCppUTest) - Integration test framework using CppUTest and delegates.
+* [IntegrationTestFrameworkDoctest](https://github.com/DelegateMQ/IntegrationTestFrameworkDoctest) - Integration test framework using Doctest and delegates.
 
 # Getting Started
 [CMake](https://cmake.org/) is used to create the project build files. See `CMakeLists.txt` for more information.
@@ -129,7 +124,7 @@ The DelegateMQ library offers both synchronous and asynchronous function invocat
 * **Publish/Subscribe** - publisher exposes a delegate container to allow subscriber callbacks via anonymous runtime registration.
 * **Asynchronous Call** - asynchronously invoke any function on a specified thread using either a blocking or non-blocking call.
 
-See [DelegateMQ](https://github.com/endurodave/DelegateMQ) for more information.
+See [DelegateMQ](https://github.com/DelegateMQ/DelegateMQ) for more information.
 
 # Integration Tests
 The integration tests are contained within `Logger_IT.cc`. All tests follow a similar pattern:
@@ -422,7 +417,7 @@ The `FlushTestSimplifiedWithLambda` example is identical to the previous test bu
 TEST(Logger_IT, FlushTimeSimplifiedWithLambda)
 {
     // Logger callback handler lambda function invoked from Logger thread context
-    auto FlushTimeLambdaCb = +[](milliseconds duration) -> void
+    auto FlushTimeLambdaCb = [](milliseconds duration) -> void
     {
         // Protect flushTime against multiple thread access by IntegrationTest 
         // thread and Logger thread
