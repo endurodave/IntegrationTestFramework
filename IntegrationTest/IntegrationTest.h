@@ -26,10 +26,10 @@ private:
     void Run();
 
     // The integration test worker thread that executes Google Test
-    Thread m_thread;
+    dmq::os::Thread m_thread;
 
     // Timer to start integration tests
-    Timer m_timer;
+    dmq::util::Timer m_timer;
 
     // RAII connection handle for m_timer.OnExpired; auto-disconnects on destruction
     dmq::ScopedConnection m_timerConnection;
